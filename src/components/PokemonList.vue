@@ -241,6 +241,9 @@ export default {
         this.renderPokemon(this.currentId);
       }
     },
+    unmounted() {
+      window.removeEventListener("scroll", this.handleScroll);
+    },
 
     nextPokemon() {
       if (this.selectedType && this.pokemonListByType.length > 0) {

@@ -4,7 +4,6 @@
         <div v-if="pokemon">
           <h2 class="pokemon-title">{{ pokemon.name }} <small>#{{ pokemon.id }}</small></h2>
   
-          <!-- Sprite principal -->
           <img
             :src="`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.id}.png`"
             alt="sprite"
@@ -163,7 +162,6 @@
     border: 1px solid #ccc;
   }
   
- /* Ataques e Evoluções estilizados como cards */
 .list li {
   background-color: #fff;
   color: #212121;
@@ -181,7 +179,6 @@
   background-color: #fce4ec;
 }
 
-/* Título da seção para dar espaçamento e destaque */
 .section-title {
   font-size: 1.4rem;
   margin-top: 2rem;
@@ -191,7 +188,6 @@
   color: #d32f2f;
 }
 
-/* Melhorando a responsividade da lista */
 .list {
   list-style: none;
   padding: 0;

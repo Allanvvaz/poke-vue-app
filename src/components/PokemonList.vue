@@ -13,7 +13,6 @@
       <span class="pokemon__name">{{ pokemon?.name }}</span>
     </h1>
 
-    <!-- Formulário de busca -->
     <form @submit.prevent="searchPokemon" class="form">
       <input
         type="search"
@@ -24,7 +23,6 @@
       />
     </form>
 
-    <!-- Seletor de tipos de Pokémon -->
     <div class="form_type">
       <select
         v-model="selectedType"
@@ -54,12 +52,10 @@
     </div>
   </section>
 
-  <!-- Botão para esconder/mostrar Pokédex -->
   <button @click="showMain = !showMain" class="toggle-button">
     {{ showMain ? "Hide Pokédex" : "Show Pokédex" }}
   </button>
 
-  <!-- Botões que devem sumir junto com a Pokédex -->
   <div class="details-button-group" v-if="showMain">
     <button class="button btn-details" @click="goToDetails">Details 🔍</button>
     <button class="button btn-species" @click="fetchSpeciesInfo">
@@ -77,8 +73,8 @@ export default {
       currentId: 1,
       pokemon: null,
       pokemonImage: "",
-      pokemonTypes: [], // Lista de tipos de Pokémon
-      selectedType: "", // Tipo selecionado
+      pokemonTypes: [],
+      selectedType: "",
       pokemonListByType: [],
       currentTypeIndex: 0,
       pokemonList: [],
@@ -163,20 +159,18 @@ export default {
     },
 
     async fetchPokemonTypes() {
-      // Busca os tipos de Pokémon na API
       const response = await fetch(`https://pokeapi.co/api/v2/type/`);
       const data = await response.json();
       this.pokemonTypes = data.results.map((type) => type.name);
     },
     async fetchPokemonByType() {
-      this.pokemonList = []; // Limpa a lista antes de carregar o novo tipo
+      this.pokemonList = [];
 
       if (!this.selectedType) {
-        // Se o tipo for desmarcado, volta à lista geral
         this.pokemonList = [];
         this.offset = 0;
         this.fetchPokemonList();
-        this.renderPokemon(this.currentId); // Exibe o último Pokémon visto
+        this.renderPokemon(this.currentId);
         return;
       }
 
@@ -199,11 +193,11 @@ export default {
       );
 
       this.pokemonList = detailedList;
-      this.pokemonListByType = detailedList.map((p) => p.name); // Atualiza a lista para navegação com prev/next
+      this.pokemonListByType = detailedList.map((p) => p.name);
       this.currentTypeIndex = 0;
 
       if (detailedList.length > 0) {
-        this.renderPokemon(detailedList[0].name); // Atualiza a Pokédex principal
+        this.renderPokemon(detailedList[0].name);
       }
     },
     goToDetails() {
@@ -213,6 +207,7 @@ export default {
       this.pokemon = null;
       this.pokemonImage = "";
       this.pokemon = await this.fetchPokemon(pokemon);
+      //Garante que a imagem do Pokémon seja exibida corretamente
       if (this.pokemon) {
         this.pokemonImage =
           this.pokemon.sprites.versions?.["generation-v"]?.["black-white"]
@@ -270,7 +265,7 @@ export default {
   },
   mounted() {
     this.renderPokemon(this.currentId);
-    this.fetchPokemonTypes(); // Carrega os tipos ao iniciar a aplicação
+    this.fetchPokemonTypes();
     window.addEventListener("scroll", this.handleScroll);
     this.fetchPokemonList();
   }
@@ -278,7 +273,6 @@ export default {
 </script>
 
 <style scoped>
-/* Fundo e layout geral */
 main {
   position: fixed;
   top: 0;
@@ -291,7 +285,6 @@ main {
   justify-content: start;
 }
 
-/* Pokédex */
 .pokedex {
   width: 320px;
   max-width: 100%;
@@ -301,7 +294,6 @@ main {
   transform: translateX(-50%);
 }
 
-/* Imagem do Pokémon */
 .pokemon__image {
   position: fixed;
   top: 210px;
@@ -311,7 +303,6 @@ main {
   z-index: 10;
 }
 
-/* Nome e número do Pokémon */
 .pokemon__data {
   position: fixed;
   top: 315px;
@@ -324,7 +315,6 @@ main {
   width: 100%;
 }
 
-/* Formulário de busca */
 .form {
   position: fixed;
   top: 360px;
@@ -342,7 +332,6 @@ main {
   text-align: center;
 }
 
-/* Select de tipo */
 .form_type {
   margin-top: 10px;
   position: fixed;
@@ -351,7 +340,6 @@ main {
   transform: translateX(-50%);
 }
 
-/* Botões de navegação */
 .buttons {
   display: flex;
   gap: 10px;
@@ -371,7 +359,6 @@ main {
   box-shadow: -2px 3px 0 #222, -4px 6px 0 #000;
 }
 
-/* Botão de detalhes */
 .details-button {
   position: fixed;
   top: 550px;
@@ -387,7 +374,6 @@ main {
   transition: background-color 0.3s ease, transform 0.3s ease;
 }
 
-/* Alternativa para o botão com classes */
 .button.btn-details {
   background-color: #3b4cca;
   color: white;

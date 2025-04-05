@@ -31,7 +31,7 @@
         @change="fetchPokemonByType"
         class="input__search"
       >
-        <option value="">Selecione um tipo</option>
+        <option value="">Select a Type</option>
         <option v-for="type in pokemonTypes" :key="type" :value="type">
           {{ type }}
         </option>
@@ -39,15 +39,10 @@
     </div>
 
     <div class="buttons">
-      <button class="button btn-prev" @click="prevPokemon">Ant &lt;</button>
-      <button class="button btn-next" @click="nextPokemon">Prox &gt;</button>
+      <button class="button btn-prev" @click="prevPokemon">Prev &lt;</button>
+      <button class="button btn-next" @click="nextPokemon">Next &gt;</button>
     </div>
 
-    <div class="details-button">
-      <button class="button btn-details" @click="goToDetails">
-        Details 🔍
-      </button>
-    </div>
   </main>
   <section class="infinite-list">
     <div
@@ -60,8 +55,17 @@
     </div>
   </section>
   <button @click="showMain = !showMain" class="toggle-button">
-    {{ showMain ? "Esconder Pokédex" : "Mostrar Pokédex" }}
+    {{ showMain ? "Hide Pokédex" : "Show Pokédex" }}
   </button>
+  <div class="details-button-group">
+  <button class="button btn-details" @click="goToDetails">
+    Details 🔍
+  </button>
+  <button class="button btn-species" @click="fetchSpeciesInfo">
+    Species Info 📘
+  </button>
+</div>
+
 </template>
 
 <script>
@@ -97,6 +101,42 @@ export default {
         return null;
       }
     },
+    async fetchSpeciesInfo() {
+  try {
+    const response = await fetch(
+      `https://pokeapi.co/api/v2/pokemon-species/${this.currentId}`
+    );
+    const data = await response.json();
+
+    const especie = {
+      id: data.id,
+      nome: data.name,
+      ordem: data.order,
+      taxa_de_genero: data.gender_rate,
+      taxa_de_captura: data.capture_rate,
+      base_felicidade: data.base_happiness,
+      e_bebe: data.is_baby,
+      e_lendario: data.is_legendary,
+      e_mitico: data.is_mythical
+    };
+
+    alert(`
+📘 Species Info:
+- Nome: ${especie.nome}
+- Ordem: ${especie.ordem}
+- Taxa de Gênero: ${especie.taxa_de_genero}
+- Taxa de Captura: ${especie.taxa_de_captura}
+- Felicidade Base: ${especie.base_felicidade}
+- É Bebê? ${especie.e_bebe ? "Sim" : "Não"}
+- É Lendário? ${especie.e_lendario ? "Sim" : "Não"}
+- É Mítico? ${especie.e_mitico ? "Sim" : "Não"}
+    `);
+  } catch (error) {
+    console.error("Erro ao buscar dados da species:", error);
+    alert("Erro ao buscar informações da espécie.");
+  }
+}
+,
     async fetchPokemonList() {
       if (this.isLoading) return;
       this.isLoading = true;
@@ -130,45 +170,43 @@ export default {
       this.pokemonTypes = data.results.map((type) => type.name);
     },
     async fetchPokemonByType() {
-  this.pokemonList = []; // Limpa a lista antes de carregar o novo tipo
+      this.pokemonList = []; // Limpa a lista antes de carregar o novo tipo
 
-  if (!this.selectedType) {
-    // Se o tipo for desmarcado, volta à lista geral
-    this.pokemonList = [];
-    this.offset = 0;
-    this.fetchPokemonList();
-    this.renderPokemon(this.currentId); // Exibe o último Pokémon visto
-    return;
-  }
+      if (!this.selectedType) {
+        // Se o tipo for desmarcado, volta à lista geral
+        this.pokemonList = [];
+        this.offset = 0;
+        this.fetchPokemonList();
+        this.renderPokemon(this.currentId); // Exibe o último Pokémon visto
+        return;
+      }
 
-  const response = await fetch(
-    `https://pokeapi.co/api/v2/type/${this.selectedType}`
-  );
-  const data = await response.json();
+      const response = await fetch(
+        `https://pokeapi.co/api/v2/type/${this.selectedType}`
+      );
+      const data = await response.json();
 
-  const pokemonNames = data.pokemon.map((p) => p.pokemon.name);
-  const detailedList = await Promise.all(
-    pokemonNames.map(async (name) => {
-      const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${name}`);
-      const pokeData = await res.json();
-      return {
-        name: pokeData.name,
-        id: pokeData.id,
-        image: pokeData.sprites.front_default
-      };
-    })
-  );
+      const pokemonNames = data.pokemon.map((p) => p.pokemon.name);
+      const detailedList = await Promise.all(
+        pokemonNames.map(async (name) => {
+          const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${name}`);
+          const pokeData = await res.json();
+          return {
+            name: pokeData.name,
+            id: pokeData.id,
+            image: pokeData.sprites.front_default
+          };
+        })
+      );
 
-  this.pokemonList = detailedList;
-  this.pokemonListByType = detailedList.map((p) => p.name); // Atualiza a lista para navegação com prev/next
-  this.currentTypeIndex = 0;
+      this.pokemonList = detailedList;
+      this.pokemonListByType = detailedList.map((p) => p.name); // Atualiza a lista para navegação com prev/next
+      this.currentTypeIndex = 0;
 
-  if (detailedList.length > 0) {
-    this.renderPokemon(detailedList[0].name); // Atualiza a Pokédex principal
-  }
-}
-,
-
+      if (detailedList.length > 0) {
+        this.renderPokemon(detailedList[0].name); // Atualiza a Pokédex principal
+      }
+    },
     goToDetails() {
       this.$router.push(`/pokemon/${this.currentId}`);
     },
@@ -339,22 +377,31 @@ main {
   transform: translateX(-50%);
   padding: 8px 16px;
   font-size: 16px;
-  background-color: #3366ff;
   color: white;
   border: none;
   border-radius: 8px;
   cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.3s ease, transform 0.3s ease;
 }
 
+/* Alternativa para o botão com classes */
 .button.btn-details {
   background-color: #3b4cca;
   color: white;
   padding: 0.5rem 1rem;
-  border-radius: 0px;
+  border-radius: 6px;
   border: none;
   cursor: pointer;
   font-weight: bold;
+  transition: background-color 0.3s ease, transform 0.3s ease;
 }
+
+.button.btn-details:hover {
+  background-color: #2a3699;
+  transform: scale(1.05);
+}
+
 .infinite-list {
   margin-top: 700px;
   display: flex;
@@ -363,6 +410,7 @@ main {
   padding: 1rem;
   gap: 1rem;
   background-color: #f7f7f7;
+  border-radius: 8px;
 }
 
 .pokemon-card {
@@ -391,4 +439,32 @@ main {
   cursor: pointer;
   box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
 }
+.button.btn-species {
+  background-color: #ff7043;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+  margin-left: 10px;
+}
+
+.button.btn-species:hover {
+  background-color: #e64a19;
+  transform: scale(1.05);
+}
+
+.details-button-group {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  position: fixed;
+  top: 550px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
 </style>

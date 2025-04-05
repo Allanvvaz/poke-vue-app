@@ -41,10 +41,20 @@
       <button class="button btn-next" @click="nextPokemon">Next &gt;</button>
     </div>
   </main>
+  <div class="filter-buttons" v-if="!showMain">
+    <button class="button filter-btn" @click="filtrar('bebe')">Bebês</button>
+    <button class="button filter-btn" @click="filtrar('mitico')">
+      Míticos
+    </button>
+    <button class="button filter-btn" @click="filtrar('lendario')">
+      Lendários
+    </button>
+    <button class="button filter-btn" @click="resetarFiltro">Todos</button>
+  </div>
   <section class="infinite-list">
     <div
       class="pokemon-card"
-      v-for="pokemon in pokemonList"
+      v-for="pokemon in pokemonListFiltrada"
       :key="pokemon.name"
     >
       <img :src="pokemon.image" :alt="pokemon.name" />
@@ -79,14 +89,36 @@ export default {
       currentTypeIndex: 0,
       pokemonList: [],
       showMain: true,
-      isFilteringByType: false,
+      filtroAtual: null,
 
       limit: 20,
       offset: 0,
       isLoading: false
     };
   },
+  computed: {
+    pokemonListFiltrada() {
+      if (!this.filtroAtual) return this.pokemonList;
+
+      switch (this.filtroAtual) {
+        case "bebe":
+          return this.pokemonList.filter((p) => p.is_baby);
+        case "mitico":
+          return this.pokemonList.filter((p) => p.is_mythical);
+        case "lendario":
+          return this.pokemonList.filter((p) => p.is_legendary);
+        default:
+          return this.pokemonList;
+      }
+    }
+  },
   methods: {
+    filtrar(tipo) {
+      this.filtroAtual = tipo;
+    },
+    resetarFiltro() {
+      this.filtroAtual = null;
+    },
     async fetchPokemon(pokemon) {
       const response = await fetch(
         `https://pokeapi.co/api/v2/pokemon/${pokemon}`
@@ -97,6 +129,7 @@ export default {
         return null;
       }
     },
+    
     async fetchSpeciesInfo() {
       try {
         const response = await fetch(
@@ -132,6 +165,7 @@ export default {
         alert("Erro ao buscar informações da espécie.");
       }
     },
+    
     async fetchPokemonList() {
       if (this.isLoading) return;
       this.isLoading = true;
@@ -145,6 +179,7 @@ export default {
         data.results.map(async (p) => {
           const res = await fetch(p.url);
           const pokeData = await res.json();
+
           return {
             name: p.name,
             id: pokeData.id,
@@ -236,9 +271,10 @@ export default {
         this.renderPokemon(this.currentId);
       }
     },
-    unmounted() {
-      window.removeEventListener("scroll", this.handleScroll);
-    },
+    beforeDestroy() {
+  window.removeEventListener("scroll", this.handleScroll);
+},
+
 
     nextPokemon() {
       if (this.selectedType && this.pokemonListByType.length > 0) {

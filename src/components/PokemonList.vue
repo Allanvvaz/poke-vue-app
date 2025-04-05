@@ -1,12 +1,7 @@
 <template>
   <main v-if="showMain">
     <img src="../images/pokedex.png" alt="pokedex" class="pokedex" />
-    <img
-      :src="pokemonImage"
-      v-if="pokemonImage"
-      alt="pokemon"
-      class="pokemom__image"
-    />
+    <img :src="pokemonImage" v-if="pokemonImage" alt="pokemon" class="pokemom__image" />
 
     <h1 class="pokemom__data">
       <span class="pokemom__number">{{ pokemon?.id }}</span> -
@@ -15,22 +10,12 @@
 
     <!-- Formulário de busca -->
     <form @submit.prevent="searchPokemon" class="form">
-      <input
-        type="search"
-        v-model="search"
-        class="input__search"
-        placeholder="Name or Number"
-        required
-      />
+      <input type="search" v-model="search" class="input__search" placeholder="Name or Number" required />
     </form>
 
     <!-- Seletor de tipos de Pokémon -->
     <div class="form_type">
-      <select
-        v-model="selectedType"
-        @change="fetchPokemonByType"
-        class="input__search"
-      >
+      <select v-model="selectedType" @change="fetchPokemonByType" class="input__search">
         <option value="">Select a Type</option>
         <option v-for="type in pokemonTypes" :key="type" :value="type">
           {{ type }}
@@ -42,29 +27,28 @@
       <button class="button btn-prev" @click="prevPokemon">Prev &lt;</button>
       <button class="button btn-next" @click="nextPokemon">Next &gt;</button>
     </div>
-
   </main>
   <section class="infinite-list">
-    <div
-      class="pokemon-card"
-      v-for="pokemon in pokemonList"
-      :key="pokemon.name"
-    >
+    <div class="pokemon-card" v-for="pokemon in pokemonList" :key="pokemon.name">
       <img :src="pokemon.image" :alt="pokemon.name" />
       <p>#{{ pokemon.id }} - {{ pokemon.name }}</p>
     </div>
   </section>
+
+  <!-- Botão para esconder/mostrar Pokédex -->
   <button @click="showMain = !showMain" class="toggle-button">
     {{ showMain ? "Hide Pokédex" : "Show Pokédex" }}
   </button>
-  <div class="details-button-group">
-  <button class="button btn-details" @click="goToDetails">
-    Details 🔍
-  </button>
-  <button class="button btn-species" @click="fetchSpeciesInfo">
-    Species Info 📘
-  </button>
-</div>
+
+  <!-- Botões que devem sumir junto com a Pokédex -->
+  <div class="details-button-group" v-if="showMain">
+    <button class="button btn-details" @click="goToDetails">
+      Details 🔍
+    </button>
+    <button class="button btn-species" @click="fetchSpeciesInfo">
+      Species Info 📘
+    </button>
+  </div>
 
 </template>
 
@@ -102,25 +86,25 @@ export default {
       }
     },
     async fetchSpeciesInfo() {
-  try {
-    const response = await fetch(
-      `https://pokeapi.co/api/v2/pokemon-species/${this.currentId}`
-    );
-    const data = await response.json();
+      try {
+        const response = await fetch(
+          `https://pokeapi.co/api/v2/pokemon-species/${this.currentId}`
+        );
+        const data = await response.json();
 
-    const especie = {
-      id: data.id,
-      nome: data.name,
-      ordem: data.order,
-      taxa_de_genero: data.gender_rate,
-      taxa_de_captura: data.capture_rate,
-      base_felicidade: data.base_happiness,
-      e_bebe: data.is_baby,
-      e_lendario: data.is_legendary,
-      e_mitico: data.is_mythical
-    };
+        const especie = {
+          id: data.id,
+          nome: data.name,
+          ordem: data.order,
+          taxa_de_genero: data.gender_rate,
+          taxa_de_captura: data.capture_rate,
+          base_felicidade: data.base_happiness,
+          e_bebe: data.is_baby,
+          e_lendario: data.is_legendary,
+          e_mitico: data.is_mythical
+        };
 
-    alert(`
+        alert(`
 📘 Species Info:
 - Nome: ${especie.nome}
 - Ordem: ${especie.ordem}
@@ -131,12 +115,12 @@ export default {
 - É Lendário? ${especie.e_lendario ? "Sim" : "Não"}
 - É Mítico? ${especie.e_mitico ? "Sim" : "Não"}
     `);
-  } catch (error) {
-    console.error("Erro ao buscar dados da species:", error);
-    alert("Erro ao buscar informações da espécie.");
-  }
-}
-,
+      } catch (error) {
+        console.error("Erro ao buscar dados da species:", error);
+        alert("Erro ao buscar informações da espécie.");
+      }
+    }
+    ,
     async fetchPokemonList() {
       if (this.isLoading) return;
       this.isLoading = true;
@@ -426,6 +410,7 @@ main {
 .pokemon-card img {
   width: 80px;
 }
+
 .toggle-button {
   position: fixed;
   top: 10px;
@@ -439,6 +424,7 @@ main {
   cursor: pointer;
   box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
 }
+
 .button.btn-species {
   background-color: #ff7043;
   color: white;
@@ -466,5 +452,4 @@ main {
   left: 50%;
   transform: translateX(-50%);
 }
-
 </style>

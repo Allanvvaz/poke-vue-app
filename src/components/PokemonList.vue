@@ -1,21 +1,36 @@
 <template>
   <main v-if="showMain">
     <img src="../images/pokedex.png" alt="pokedex" class="pokedex" />
-    <img :src="pokemonImage" v-if="pokemonImage" alt="pokemon" class="pokemom__image" />
+    <img
+      :src="pokemonImage"
+      v-if="pokemonImage"
+      alt="pokemon"
+      class="pokemon__image"
+    />
 
-    <h1 class="pokemom__data">
-      <span class="pokemom__number">{{ pokemon?.id }}</span> -
-      <span class="pokemom__name">{{ pokemon?.name }}</span>
+    <h1 class="pokemon__data">
+      <span class="pokemon__number">{{ pokemon?.id }}</span> -
+      <span class="pokemon__name">{{ pokemon?.name }}</span>
     </h1>
 
     <!-- Formulário de busca -->
     <form @submit.prevent="searchPokemon" class="form">
-      <input type="search" v-model="search" class="input__search" placeholder="Name or Number" required />
+      <input
+        type="search"
+        v-model="search"
+        class="input__search"
+        placeholder="Name or Number"
+        required
+      />
     </form>
 
     <!-- Seletor de tipos de Pokémon -->
     <div class="form_type">
-      <select v-model="selectedType" @change="fetchPokemonByType" class="input__search">
+      <select
+        v-model="selectedType"
+        @change="fetchPokemonByType"
+        class="input__search"
+      >
         <option value="">Select a Type</option>
         <option v-for="type in pokemonTypes" :key="type" :value="type">
           {{ type }}
@@ -29,7 +44,11 @@
     </div>
   </main>
   <section class="infinite-list">
-    <div class="pokemon-card" v-for="pokemon in pokemonList" :key="pokemon.name">
+    <div
+      class="pokemon-card"
+      v-for="pokemon in pokemonList"
+      :key="pokemon.name"
+    >
       <img :src="pokemon.image" :alt="pokemon.name" />
       <p>#{{ pokemon.id }} - {{ pokemon.name }}</p>
     </div>
@@ -42,14 +61,11 @@
 
   <!-- Botões que devem sumir junto com a Pokédex -->
   <div class="details-button-group" v-if="showMain">
-    <button class="button btn-details" @click="goToDetails">
-      Details 🔍
-    </button>
+    <button class="button btn-details" @click="goToDetails">Details 🔍</button>
     <button class="button btn-species" @click="fetchSpeciesInfo">
       Species Info 📘
     </button>
   </div>
-
 </template>
 
 <script>
@@ -119,8 +135,7 @@ export default {
         console.error("Erro ao buscar dados da species:", error);
         alert("Erro ao buscar informações da espécie.");
       }
-    }
-    ,
+    },
     async fetchPokemonList() {
       if (this.isLoading) return;
       this.isLoading = true;
@@ -200,9 +215,9 @@ export default {
       this.pokemon = await this.fetchPokemon(pokemon);
       if (this.pokemon) {
         this.pokemonImage =
-          this.pokemon.sprites.versions["generation-v"][
-            "black-white"
-          ].animated.front_default;
+          this.pokemon.sprites.versions?.["generation-v"]?.["black-white"]
+            ?.animated?.front_default || this.pokemon.sprites.front_default;
+
         this.currentId = this.pokemon.id;
         this.search = "";
       }
@@ -284,7 +299,7 @@ main {
 }
 
 /* Imagem do Pokémon */
-.pokemom__image {
+.pokemon__image {
   position: fixed;
   top: 210px;
   left: 50%;
@@ -294,7 +309,7 @@ main {
 }
 
 /* Nome e número do Pokémon */
-.pokemom__data {
+.pokemon__data {
   position: fixed;
   top: 315px;
   left: 50%;

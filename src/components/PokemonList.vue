@@ -1,12 +1,7 @@
 <template>
   <main v-if="showMain">
     <img src="../images/pokedex.png" alt="pokedex" class="pokedex" />
-    <img
-      :src="pokemonImage"
-      v-if="pokemonImage"
-      alt="pokemon"
-      class="pokemon__image"
-    />
+    <img :src="pokemonImage" v-if="pokemonImage" alt="pokemon" class="pokemon__image" />
 
     <h1 class="pokemon__data">
       <span class="pokemon__number">{{ pokemon?.id }}</span> -
@@ -14,21 +9,11 @@
     </h1>
 
     <form @submit.prevent="searchPokemon" class="form">
-      <input
-        type="search"
-        v-model="search"
-        class="input__search"
-        placeholder="Name or Number"
-        required
-      />
+      <input type="search" v-model="search" class="input__search" placeholder="Name or Number" required />
     </form>
 
     <div class="form_type">
-      <select
-        v-model="selectedType"
-        @change="fetchPokemonByType"
-        class="input__search"
-      >
+      <select v-model="selectedType" @change="fetchPokemonByType" class="input__search">
         <option value="">Select a Type</option>
         <option v-for="type in pokemonTypes" :key="type" :value="type">
           {{ type }}
@@ -52,11 +37,7 @@
     <button class="button filter-btn" @click="resetarFiltro">Todos</button>
   </div>
   <section class="infinite-list">
-    <div
-      class="pokemon-card"
-      v-for="pokemon in pokemonListFiltrada"
-      :key="pokemon.name"
-    >
+    <div class="pokemon-card" v-for="pokemon in pokemonListFiltrada" :key="pokemon.name">
       <img :src="pokemon.image" :alt="pokemon.name" />
       <p>#{{ pokemon.id }} - {{ pokemon.name }}</p>
     </div>
@@ -115,9 +96,16 @@ export default {
   methods: {
     filtrar(tipo) {
       this.filtroAtual = tipo;
+      this.isFilteringByType = true;
+
+
     },
     resetarFiltro() {
       this.filtroAtual = null;
+      this.isFilteringByType = false;
+      this.offset = 0;
+      this.pokemonList = [];
+      this.fetchPokemonList();
     },
     async fetchPokemon(pokemon) {
       const response = await fetch(
@@ -129,7 +117,7 @@ export default {
         return null;
       }
     },
-    
+
     async fetchSpeciesInfo() {
       try {
         const response = await fetch(
@@ -165,7 +153,7 @@ export default {
         alert("Erro ao buscar informações da espécie.");
       }
     },
-    
+
     async fetchPokemonList() {
       if (this.isLoading) return;
       this.isLoading = true;
@@ -180,10 +168,16 @@ export default {
           const res = await fetch(p.url);
           const pokeData = await res.json();
 
+          const speciesRes = await fetch(`https://pokeapi.co/api/v2/pokemon-species/${pokeData.id}`);
+          const speciesData = await speciesRes.json();
+
           return {
-            name: p.name,
+            name: pokeData.name,
             id: pokeData.id,
-            image: pokeData.sprites.front_default
+            image: pokeData.sprites.front_default,
+            is_baby: speciesData.is_baby,
+            is_mythical: speciesData.is_mythical,
+            is_legendary: speciesData.is_legendary
           };
         })
       );
@@ -272,8 +266,8 @@ export default {
       }
     },
     beforeDestroy() {
-  window.removeEventListener("scroll", this.handleScroll);
-},
+      window.removeEventListener("scroll", this.handleScroll);
+    },
 
 
     nextPokemon() {
@@ -288,7 +282,7 @@ export default {
       }
     },
     handleScroll() {
-      if (this.isFilteringByType) return;
+      if (this.isFilteringByType || this.isLoading) return;
 
       const scrollTop = window.scrollY;
       const windowHeight = window.innerHeight;

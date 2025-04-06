@@ -37,11 +37,21 @@
     <button class="button filter-btn" @click="resetarFiltro">Todos</button>
   </div>
   <section class="infinite-list">
-    <div class="pokemon-card" v-for="pokemon in pokemonListFiltrada" :key="pokemon.name">
-      <img :src="pokemon.image" :alt="pokemon.name" />
-      <p>#{{ pokemon.id }} - {{ pokemon.name }}</p>
+  <div class="pokemon-card" v-for="pokemon in pokemonListFiltrada" :key="pokemon.name">
+    <img :src="pokemon.image" :alt="pokemon.name" />
+    <p>#{{ pokemon.id }} - {{ pokemon.name }}</p>
+    <div class="pokemon-types">
+      <span 
+        v-for="type in pokemon.types" 
+        :key="type"
+        class="type-badge"
+        :class="'type-' + type"
+      >
+        {{ type }}
+      </span>
     </div>
-  </section>
+  </div>
+</section>
 
   <button @click="showMain = !showMain" class="toggle-button">
     {{ showMain ? "Hide Pokédex" : "Show Pokédex" }}
@@ -58,35 +68,30 @@
 <script>
 export default {
   name: "PokemonPokedex",
-    //data Properties - Agrupadas por funcionalidade
+  //data Properties - Agrupadas por funcionalidade
   data() {
     return {
-      // Estado da UI
       showMain: false,
       isLoading: false,
 
-      // Dados do Pokémon atual
       pokemon: null,
       pokemonImage: "",
       currentId: 1,
 
-      // Sistema de busca/filtro
       search: "",
       selectedType: "",
       pokemonTypes: [],
       filtroAtual: null,
 
-      // Listagem de Pokémons
       pokemonList: [],
       limit: 20,
       offset: 0,
 
-      // Filtro por tipo
       pokemonListByType: [],
       currentTypeIndex: 0
     };
   },
-    //computed Properties - Ordem lógica
+  //computed Properties - Ordem lógica
 
   computed: {
     pokemonListFiltrada() {
@@ -104,15 +109,17 @@ export default {
       }
     }
   },
-    // 3. Lifecycle Hooks
+  // lifecycle Hooks
   mounted() {
     this.renderPokemon(this.currentId);
     this.fetchPokemonTypes();
     window.addEventListener("scroll", this.handleScroll);
     this.fetchPokemonList();
   },
-    //methods - Agrupados por funcionalidade
+
+  //methods - Agrupados por funcionalidade
   methods: {
+
     //navegação entre Pokémons
     nextPokemon() {
       if (this.selectedType && this.pokemonListByType.length > 0) {
@@ -149,6 +156,7 @@ export default {
         this.search = "";
       }
     },
+
     //Busca/Filtros
     searchPokemon() {
       this.selectedType = "";
@@ -181,8 +189,9 @@ export default {
           const pokeData = await res.json();
           return {
             name: pokeData.name,
-            id: pokeData.id,
-            image: pokeData.sprites.front_default
+              id: pokeData.id,
+              image: pokeData.sprites.front_default,
+              types: pokeData.types.map(t => t.type.name) 
           };
         })
       );
@@ -208,6 +217,7 @@ export default {
       this.pokemonList = [];
       this.fetchPokemonList();
     },
+
     //fetch de dados
     async fetchPokemon(pokemon) {
       const response = await fetch(
@@ -253,7 +263,8 @@ export default {
               image: pokeData.sprites.front_default,
               is_baby: speciesData.is_baby,
               is_mythical: speciesData.is_mythical,
-              is_legendary: speciesData.is_legendary
+              is_legendary: speciesData.is_legendary,
+              types: pokeData.types.map(t => t.type.name) 
             };
           })
         );
@@ -287,6 +298,7 @@ export default {
           return lista;
       }
     },
+
     //navegação entre páginas
     goToDetails() {
       this.$router.push(`/pokemon/${this.currentId}`);
@@ -450,6 +462,41 @@ main {
   text-align: center;
   width: 120px;
 }
+.pokemon-types {
+  display: flex;
+  gap: 5px;
+  justify-content: center;
+  margin-top: 5px;
+}
+
+.type-badge {
+  padding: 3px 8px;
+  border-radius: 10px;
+  font-size: 12px;
+  color: white;
+  text-transform: capitalize;
+  font-weight: bold;
+  text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.3);
+}
+
+.type-normal { background-color: #A8A878; }
+.type-fire { background-color: #F08030; }
+.type-water { background-color: #6890F0; }
+.type-electric { background-color: #F8D030; }
+.type-grass { background-color: #78C850; }
+.type-ice { background-color: #98D8D8; }
+.type-fighting { background-color: #C03028; }
+.type-poison { background-color: #A040A0; }
+.type-ground { background-color: #E0C068; }
+.type-flying { background-color: #A890F0; }
+.type-psychic { background-color: #F85888; }
+.type-bug { background-color: #A8B820; }
+.type-rock { background-color: #B8A038; }
+.type-ghost { background-color: #705898; }
+.type-dragon { background-color: #7038F8; }
+.type-dark { background-color: #705848; }
+.type-steel { background-color: #B8B8D0; }
+.type-fairy { background-color: #EE99AC; }
 
 .pokemon-card img {
   width: 80px;

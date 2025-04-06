@@ -264,7 +264,6 @@ export default {
       this.pokemon = null;
       this.pokemonImage = "";
       this.pokemon = await this.fetchPokemon(pokemon);
-      //Garante que a imagem do Pokémon seja exibida corretamente
       if (this.pokemon) {
         this.pokemonImage =
           this.pokemon.sprites.versions?.["generation-v"]?.["black-white"]

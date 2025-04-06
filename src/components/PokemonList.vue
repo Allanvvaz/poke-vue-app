@@ -96,13 +96,13 @@ export default {
   methods: {
     filtrar(tipo) {
       this.filtroAtual = tipo;
-      this.isFilteringByType = true;
-
+      this.offset = 0;
+      this.pokemonList = [];
+      this.fetchPokemonList();
 
     },
     resetarFiltro() {
       this.filtroAtual = null;
-      this.isFilteringByType = false;
       this.offset = 0;
       this.pokemonList = [];
       this.fetchPokemonList();
@@ -158,33 +158,61 @@ export default {
       if (this.isLoading) return;
       this.isLoading = true;
 
-      const response = await fetch(
-        `https://pokeapi.co/api/v2/pokemon?limit=${this.limit}&offset=${this.offset}`
-      );
-      const data = await response.json();
+      try {
+        let response;
+        if (this.filtroAtual) {
+          response = await fetch(`https://pokeapi.co/api/v2/pokemon?limit=1000&offset=0`);
+        } else {
+          response = await fetch(
+            `https://pokeapi.co/api/v2/pokemon?limit=${this.limit}&offset=${this.offset}`
+          );
+        }
 
-      const detailedPokemon = await Promise.all(
-        data.results.map(async (p) => {
-          const res = await fetch(p.url);
-          const pokeData = await res.json();
+        const data = await response.json();
 
-          const speciesRes = await fetch(`https://pokeapi.co/api/v2/pokemon-species/${pokeData.id}`);
-          const speciesData = await speciesRes.json();
+        const detailedPokemon = await Promise.all(
+          data.results.map(async (p) => {
+            const res = await fetch(p.url);
+            const pokeData = await res.json();
 
-          return {
-            name: pokeData.name,
-            id: pokeData.id,
-            image: pokeData.sprites.front_default,
-            is_baby: speciesData.is_baby,
-            is_mythical: speciesData.is_mythical,
-            is_legendary: speciesData.is_legendary
-          };
-        })
-      );
+            const speciesRes = await fetch(`https://pokeapi.co/api/v2/pokemon-species/${pokeData.id}`);
+            const speciesData = await speciesRes.json();
 
-      this.pokemonList.push(...detailedPokemon);
-      this.offset += this.limit;
-      this.isLoading = false;
+            return {
+              name: pokeData.name,
+              id: pokeData.id,
+              image: pokeData.sprites.front_default,
+              is_baby: speciesData.is_baby,
+              is_mythical: speciesData.is_mythical,
+              is_legendary: speciesData.is_legendary
+            };
+          })
+        );
+
+        if (this.filtroAtual) {
+          this.pokemonList = this.aplicarFiltro(detailedPokemon);
+        } else {
+          this.pokemonList.push(...detailedPokemon);
+          this.offset += this.limit;
+        }
+      } catch (error) {
+        console.error("Error fetching Pokémon list:", error);
+      } finally {
+        this.isLoading = false;
+      }
+    },
+
+    aplicarFiltro(lista) {
+      switch (this.filtroAtual) {
+        case "bebe":
+          return lista.filter((p) => p.is_baby);
+        case "mitico":
+          return lista.filter((p) => p.is_mythical);
+        case "lendario":
+          return lista.filter((p) => p.is_legendary);
+        default:
+          return lista;
+      }
     },
 
     async fetchPokemonTypes() {
@@ -282,7 +310,7 @@ export default {
       }
     },
     handleScroll() {
-      if (this.isFilteringByType || this.isLoading) return;
+      if (this.isLoading || this.filtroAtual) return;
 
       const scrollTop = window.scrollY;
       const windowHeight = window.innerHeight;

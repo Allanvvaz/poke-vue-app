@@ -37,21 +37,16 @@
     <button class="button filter-btn" @click="resetarFiltro">Todos</button>
   </div>
   <section class="infinite-list">
-  <div class="pokemon-card" v-for="pokemon in pokemonListFiltrada" :key="pokemon.name">
-    <img :src="pokemon.image" :alt="pokemon.name" />
-    <p>#{{ pokemon.id }} - {{ pokemon.name }}</p>
-    <div class="pokemon-types">
-      <span 
-        v-for="type in pokemon.types" 
-        :key="type"
-        class="type-badge"
-        :class="'type-' + type"
-      >
-        {{ type }}
-      </span>
+    <div class="pokemon-card" v-for="pokemon in pokemonListFiltrada" :key="pokemon.name">
+      <img :src="pokemon.image" :alt="pokemon.name" />
+      <p>#{{ pokemon.id }} - {{ pokemon.name }}</p>
+      <div class="pokemon-types">
+        <span v-for="type in pokemon.types" :key="type" class="type-badge" :class="'type-' + type">
+          {{ type }}
+        </span>
+      </div>
     </div>
-  </div>
-</section>
+  </section>
 
   <button @click="showMain = !showMain" class="toggle-button">
     {{ showMain ? "Hide Pokédex" : "Show Pokédex" }}
@@ -88,26 +83,40 @@ export default {
       offset: 0,
 
       pokemonListByType: [],
-      currentTypeIndex: 0
+      currentTypeIndex: 0,
+      isFilteringByType: false,
     };
   },
   //computed Properties - Ordem lógica
 
   computed: {
     pokemonListFiltrada() {
-      if (!this.filtroAtual) return this.pokemonList;
+      let filteredList = this.pokemonList;
 
-      switch (this.filtroAtual) {
-        case "bebe":
-          return this.pokemonList.filter((p) => p.is_baby);
-        case "mitico":
-          return this.pokemonList.filter((p) => p.is_mythical);
-        case "lendario":
-          return this.pokemonList.filter((p) => p.is_legendary);
-        default:
-          return this.pokemonList;
+      if (this.selectedType && this.isFilteringByType) {
+        filteredList = filteredList.filter(pokemon =>
+          pokemon.types.includes(this.selectedType)
+        );
       }
-    }
+
+      if (this.filtroAtual) {
+        switch (this.filtroAtual) {
+          case "bebe":
+            filteredList = filteredList.filter(pokemon => pokemon.is_baby);
+            break;
+          case "mitico":
+            filteredList = filteredList.filter(pokemon => pokemon.is_mythical);
+            break;
+          case "lendario":
+            filteredList = filteredList.filter(pokemon => pokemon.is_legendary);
+            break;
+          default:
+            break;
+        }
+      }
+
+      return filteredList;
+    },
   },
   // lifecycle Hooks
   mounted() {
@@ -167,9 +176,10 @@ export default {
     },
 
     async fetchPokemonByType() {
-      this.pokemonList = [];
+      this.isFilteringByType = !!this.selectedType;
 
       if (!this.selectedType) {
+        this.isFilteringByType = false;
         this.pokemonList = [];
         this.offset = 0;
         this.fetchPokemonList();
@@ -177,45 +187,54 @@ export default {
         return;
       }
 
-      const response = await fetch(
-        `https://pokeapi.co/api/v2/type/${this.selectedType}`
-      );
+      const response = await fetch(`https://pokeapi.co/api/v2/type/${this.selectedType}`);
       const data = await response.json();
 
-      const pokemonNames = data.pokemon.map((p) => p.pokemon.name);
+      const pokemonNames = data.pokemon.map(p => p.pokemon.name);
       const detailedList = await Promise.all(
         pokemonNames.map(async (name) => {
           const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${name}`);
           const pokeData = await res.json();
+
+          const speciesRes = await fetch(`https://pokeapi.co/api/v2/pokemon-species/${pokeData.id}`);
+          const speciesData = await speciesRes.json();
+
           return {
             name: pokeData.name,
-              id: pokeData.id,
-              image: pokeData.sprites.front_default,
-              types: pokeData.types.map(t => t.type.name) 
+            id: pokeData.id,
+            image: pokeData.sprites.front_default,
+            types: pokeData.types.map(t => t.type.name),
+            is_baby: speciesData.is_baby,
+            is_mythical: speciesData.is_mythical,
+            is_legendary: speciesData.is_legendary,
           };
         })
       );
 
       this.pokemonList = detailedList;
-      this.pokemonListByType = detailedList.map((p) => p.name);
+      this.pokemonListByType = detailedList.map(p => p.name);
       this.currentTypeIndex = 0;
 
       if (detailedList.length > 0) {
         this.renderPokemon(detailedList[0].name);
       }
     },
-
     filtrar(tipo) {
       this.filtroAtual = tipo;
-      this.offset = 0;
-      this.pokemonList = [];
-      this.fetchPokemonList();
+      if (!this.isFilteringByType) {
+        this.offset = 0;
+        this.pokemonList = [];
+        this.fetchPokemonList();
+      }
     },
+
     resetarFiltro() {
       this.filtroAtual = null;
-      this.offset = 0;
-      this.pokemonList = [];
-      this.fetchPokemonList();
+      if (!this.isFilteringByType) {
+        this.offset = 0;
+        this.pokemonList = [];
+        this.fetchPokemonList();
+      }
     },
 
     //fetch de dados
@@ -264,7 +283,7 @@ export default {
               is_baby: speciesData.is_baby,
               is_mythical: speciesData.is_mythical,
               is_legendary: speciesData.is_legendary,
-              types: pokeData.types.map(t => t.type.name) 
+              types: pokeData.types.map(t => t.type.name)
             };
           })
         );
@@ -462,6 +481,7 @@ main {
   text-align: center;
   width: 120px;
 }
+
 .pokemon-types {
   display: flex;
   gap: 5px;
@@ -479,24 +499,77 @@ main {
   text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.3);
 }
 
-.type-normal { background-color: #A8A878; }
-.type-fire { background-color: #F08030; }
-.type-water { background-color: #6890F0; }
-.type-electric { background-color: #F8D030; }
-.type-grass { background-color: #78C850; }
-.type-ice { background-color: #98D8D8; }
-.type-fighting { background-color: #C03028; }
-.type-poison { background-color: #A040A0; }
-.type-ground { background-color: #E0C068; }
-.type-flying { background-color: #A890F0; }
-.type-psychic { background-color: #F85888; }
-.type-bug { background-color: #A8B820; }
-.type-rock { background-color: #B8A038; }
-.type-ghost { background-color: #705898; }
-.type-dragon { background-color: #7038F8; }
-.type-dark { background-color: #705848; }
-.type-steel { background-color: #B8B8D0; }
-.type-fairy { background-color: #EE99AC; }
+.type-normal {
+  background-color: #A8A878;
+}
+
+.type-fire {
+  background-color: #F08030;
+}
+
+.type-water {
+  background-color: #6890F0;
+}
+
+.type-electric {
+  background-color: #F8D030;
+}
+
+.type-grass {
+  background-color: #78C850;
+}
+
+.type-ice {
+  background-color: #98D8D8;
+}
+
+.type-fighting {
+  background-color: #C03028;
+}
+
+.type-poison {
+  background-color: #A040A0;
+}
+
+.type-ground {
+  background-color: #E0C068;
+}
+
+.type-flying {
+  background-color: #A890F0;
+}
+
+.type-psychic {
+  background-color: #F85888;
+}
+
+.type-bug {
+  background-color: #A8B820;
+}
+
+.type-rock {
+  background-color: #B8A038;
+}
+
+.type-ghost {
+  background-color: #705898;
+}
+
+.type-dragon {
+  background-color: #7038F8;
+}
+
+.type-dark {
+  background-color: #705848;
+}
+
+.type-steel {
+  background-color: #B8B8D0;
+}
+
+.type-fairy {
+  background-color: #EE99AC;
+}
 
 .pokemon-card img {
   width: 80px;

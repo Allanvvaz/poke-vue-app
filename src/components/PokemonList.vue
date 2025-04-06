@@ -69,7 +69,7 @@ export default {
       pokemonListByType: [],
       currentTypeIndex: 0,
       pokemonList: [],
-      showMain: true,
+      showMain: false,
       filtroAtual: null,
 
       limit: 20,
@@ -349,6 +349,7 @@ main {
   top: 50px;
   left: 50%;
   transform: translateX(-50%);
+  
 }
 
 .pokemon__image {
@@ -517,8 +518,13 @@ main {
   display: flex;
   justify-content: center;
   gap: 15px;
-  margin: 20px 0;
+  position: absolute;
+  top: 600px; 
+  left: 0;
+  right: 0;
   flex-wrap: wrap;
+  padding: 20px 0;
+  z-index: 0;
 }
 
 .button.filter-btn {

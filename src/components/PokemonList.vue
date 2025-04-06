@@ -58,24 +58,36 @@
 <script>
 export default {
   name: "PokemonPokedex",
+    //data Properties - Agrupadas por funcionalidade
   data() {
     return {
-      search: "",
-      currentId: 1,
+      // Estado da UI
+      showMain: false,
+      isLoading: false,
+
+      // Dados do Pokémon atual
       pokemon: null,
       pokemonImage: "",
-      pokemonTypes: [],
+      currentId: 1,
+
+      // Sistema de busca/filtro
+      search: "",
       selectedType: "",
-      pokemonListByType: [],
-      currentTypeIndex: 0,
-      pokemonList: [],
-      showMain: false,
+      pokemonTypes: [],
       filtroAtual: null,
+
+      // Listagem de Pokémons
+      pokemonList: [],
       limit: 20,
       offset: 0,
-      isLoading: false
+
+      // Filtro por tipo
+      pokemonListByType: [],
+      currentTypeIndex: 0
     };
   },
+    //computed Properties - Ordem lógica
+
   computed: {
     pokemonListFiltrada() {
       if (!this.filtroAtual) return this.pokemonList;
@@ -92,7 +104,98 @@ export default {
       }
     }
   },
+    // 3. Lifecycle Hooks
+  mounted() {
+    this.renderPokemon(this.currentId);
+    this.fetchPokemonTypes();
+    window.addEventListener("scroll", this.handleScroll);
+    this.fetchPokemonList();
+  },
+    //methods - Agrupados por funcionalidade
   methods: {
+    //navegação entre Pokémons
+    nextPokemon() {
+      if (this.selectedType && this.pokemonListByType.length > 0) {
+        if (this.currentTypeIndex < this.pokemonListByType.length - 1) {
+          this.currentTypeIndex++;
+          this.renderPokemon(this.pokemonListByType[this.currentTypeIndex]);
+        }
+      } else {
+        this.currentId++;
+        this.renderPokemon(this.currentId);
+      }
+    },
+    prevPokemon() {
+      if (this.selectedType && this.pokemonListByType.length > 0) {
+        if (this.currentTypeIndex > 0) {
+          this.currentTypeIndex--;
+          this.renderPokemon(this.pokemonListByType[this.currentTypeIndex]);
+        }
+      } else if (this.currentId > 1) {
+        this.currentId--;
+        this.renderPokemon(this.currentId);
+      }
+    },
+    async renderPokemon(pokemon) {
+      this.pokemon = null;
+      this.pokemonImage = "";
+      this.pokemon = await this.fetchPokemon(pokemon);
+      if (this.pokemon) {
+        this.pokemonImage =
+          this.pokemon.sprites.versions?.["generation-v"]?.["black-white"]
+            ?.animated?.front_default || this.pokemon.sprites.front_default;
+
+        this.currentId = this.pokemon.id;
+        this.search = "";
+      }
+    },
+    //Busca/Filtros
+    searchPokemon() {
+      this.selectedType = "";
+      this.isFilteringByType = false;
+      this.pokemonListByType = [];
+      this.currentTypeIndex = 0;
+      this.renderPokemon(this.search.toLowerCase());
+    },
+
+    async fetchPokemonByType() {
+      this.pokemonList = [];
+
+      if (!this.selectedType) {
+        this.pokemonList = [];
+        this.offset = 0;
+        this.fetchPokemonList();
+        this.renderPokemon(this.currentId);
+        return;
+      }
+
+      const response = await fetch(
+        `https://pokeapi.co/api/v2/type/${this.selectedType}`
+      );
+      const data = await response.json();
+
+      const pokemonNames = data.pokemon.map((p) => p.pokemon.name);
+      const detailedList = await Promise.all(
+        pokemonNames.map(async (name) => {
+          const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${name}`);
+          const pokeData = await res.json();
+          return {
+            name: pokeData.name,
+            id: pokeData.id,
+            image: pokeData.sprites.front_default
+          };
+        })
+      );
+
+      this.pokemonList = detailedList;
+      this.pokemonListByType = detailedList.map((p) => p.name);
+      this.currentTypeIndex = 0;
+
+      if (detailedList.length > 0) {
+        this.renderPokemon(detailedList[0].name);
+      }
+    },
+
     filtrar(tipo) {
       this.filtroAtual = tipo;
       this.offset = 0;
@@ -105,6 +208,7 @@ export default {
       this.pokemonList = [];
       this.fetchPokemonList();
     },
+    //fetch de dados
     async fetchPokemon(pokemon) {
       const response = await fetch(
         `https://pokeapi.co/api/v2/pokemon/${pokemon}`
@@ -115,11 +219,6 @@ export default {
         return null;
       }
     },
-
-    fetchSpeciesInfo() {
-      this.$router.push(`/pokemon-species/${this.currentId}`);
-    },
-
     async fetchPokemonList() {
       if (this.isLoading) return;
       this.isLoading = true;
@@ -171,7 +270,11 @@ export default {
         this.isLoading = false;
       }
     },
-
+    async fetchPokemonTypes() {
+      const response = await fetch(`https://pokeapi.co/api/v2/type/`);
+      const data = await response.json();
+      this.pokemonTypes = data.results.map((type) => type.name);
+    },
     aplicarFiltro(lista) {
       switch (this.filtroAtual) {
         case "bebe":
@@ -184,99 +287,14 @@ export default {
           return lista;
       }
     },
-
-    async fetchPokemonTypes() {
-      const response = await fetch(`https://pokeapi.co/api/v2/type/`);
-      const data = await response.json();
-      this.pokemonTypes = data.results.map((type) => type.name);
-    },
-    async fetchPokemonByType() {
-      this.pokemonList = [];
-
-      if (!this.selectedType) {
-        this.pokemonList = [];
-        this.offset = 0;
-        this.fetchPokemonList();
-        this.renderPokemon(this.currentId);
-        return;
-      }
-
-      const response = await fetch(
-        `https://pokeapi.co/api/v2/type/${this.selectedType}`
-      );
-      const data = await response.json();
-
-      const pokemonNames = data.pokemon.map((p) => p.pokemon.name);
-      const detailedList = await Promise.all(
-        pokemonNames.map(async (name) => {
-          const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${name}`);
-          const pokeData = await res.json();
-          return {
-            name: pokeData.name,
-            id: pokeData.id,
-            image: pokeData.sprites.front_default
-          };
-        })
-      );
-
-      this.pokemonList = detailedList;
-      this.pokemonListByType = detailedList.map((p) => p.name);
-      this.currentTypeIndex = 0;
-
-      if (detailedList.length > 0) {
-        this.renderPokemon(detailedList[0].name);
-      }
-    },
+    //navegação entre páginas
     goToDetails() {
       this.$router.push(`/pokemon/${this.currentId}`);
     },
-    async renderPokemon(pokemon) {
-      this.pokemon = null;
-      this.pokemonImage = "";
-      this.pokemon = await this.fetchPokemon(pokemon);
-      if (this.pokemon) {
-        this.pokemonImage =
-          this.pokemon.sprites.versions?.["generation-v"]?.["black-white"]
-            ?.animated?.front_default || this.pokemon.sprites.front_default;
-
-        this.currentId = this.pokemon.id;
-        this.search = "";
-      }
+    fetchSpeciesInfo() {
+      this.$router.push(`/pokemon-species/${this.currentId}`);
     },
-    searchPokemon() {
-      this.selectedType = "";
-      this.isFilteringByType = false;
-      this.pokemonListByType = [];
-      this.currentTypeIndex = 0;
-      this.renderPokemon(this.search.toLowerCase());
-    },
-
-    prevPokemon() {
-      if (this.selectedType && this.pokemonListByType.length > 0) {
-        if (this.currentTypeIndex > 0) {
-          this.currentTypeIndex--;
-          this.renderPokemon(this.pokemonListByType[this.currentTypeIndex]);
-        }
-      } else if (this.currentId > 1) {
-        this.currentId--;
-        this.renderPokemon(this.currentId);
-      }
-    },
-    beforeDestroy() {
-      window.removeEventListener("scroll", this.handleScroll);
-    },
-
-    nextPokemon() {
-      if (this.selectedType && this.pokemonListByType.length > 0) {
-        if (this.currentTypeIndex < this.pokemonListByType.length - 1) {
-          this.currentTypeIndex++;
-          this.renderPokemon(this.pokemonListByType[this.currentTypeIndex]);
-        }
-      } else {
-        this.currentId++;
-        this.renderPokemon(this.currentId);
-      }
-    },
+    //scroll infinito
     handleScroll() {
       if (this.isLoading || this.filtroAtual) return;
 
@@ -289,14 +307,10 @@ export default {
       }
     }
   },
-  mounted() {
-    this.renderPokemon(this.currentId);
-    this.fetchPokemonTypes();
-    window.addEventListener("scroll", this.handleScroll);
-    this.fetchPokemonList();
-  }
+
 };
 </script>
+
 
 <style scoped>
 main {

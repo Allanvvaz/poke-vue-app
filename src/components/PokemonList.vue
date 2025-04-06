@@ -1,12 +1,7 @@
 <template>
   <main v-if="showMain">
     <img src="../images/pokedex.png" alt="pokedex" class="pokedex" />
-    <img
-      :src="pokemonImage"
-      v-if="pokemonImage"
-      alt="pokemon"
-      class="pokemon__image"
-    />
+    <img :src="pokemonImage" v-if="pokemonImage" alt="pokemon" class="pokemon__image" />
 
     <h1 class="pokemon__data">
       <span class="pokemon__number">{{ pokemon?.id }}</span> -
@@ -14,21 +9,11 @@
     </h1>
 
     <form @submit.prevent="searchPokemon" class="form">
-      <input
-        type="search"
-        v-model="search"
-        class="input__search"
-        placeholder="Name or Number"
-        required
-      />
+      <input type="search" v-model="search" class="input__search" placeholder="Name or Number" required />
     </form>
 
     <div class="form_type">
-      <select
-        v-model="selectedType"
-        @change="fetchPokemonByType"
-        class="input__search"
-      >
+      <select v-model="selectedType" @change="fetchPokemonByType" class="input__search">
         <option value="">Select a Type</option>
         <option v-for="type in pokemonTypes" :key="type" :value="type">
           {{ type }}
@@ -52,11 +37,7 @@
     <button class="button filter-btn" @click="resetarFiltro">Todos</button>
   </div>
   <section class="infinite-list">
-    <div
-      class="pokemon-card"
-      v-for="pokemon in pokemonListFiltrada"
-      :key="pokemon.name"
-    >
+    <div class="pokemon-card" v-for="pokemon in pokemonListFiltrada" :key="pokemon.name">
       <img :src="pokemon.image" :alt="pokemon.name" />
       <p>#{{ pokemon.id }} - {{ pokemon.name }}</p>
     </div>
@@ -135,40 +116,8 @@ export default {
       }
     },
 
-    async fetchSpeciesInfo() {
-      try {
-        const response = await fetch(
-          `https://pokeapi.co/api/v2/pokemon-species/${this.currentId}`
-        );
-        const data = await response.json();
-
-        const especie = {
-          id: data.id,
-          nome: data.name,
-          ordem: data.order,
-          taxa_de_genero: data.gender_rate,
-          taxa_de_captura: data.capture_rate,
-          base_felicidade: data.base_happiness,
-          e_bebe: data.is_baby,
-          e_lendario: data.is_legendary,
-          e_mitico: data.is_mythical
-        };
-
-        alert(`
-📘 Species Info:
-- Nome: ${especie.nome}
-- Ordem: ${especie.ordem}
-- Taxa de Gênero: ${especie.taxa_de_genero}
-- Taxa de Captura: ${especie.taxa_de_captura}
-- Felicidade Base: ${especie.base_felicidade}
-- É Bebê? ${especie.e_bebe ? "Sim" : "Não"}
-- É Lendário? ${especie.e_lendario ? "Sim" : "Não"}
-- É Mítico? ${especie.e_mitico ? "Sim" : "Não"}
-    `);
-      } catch (error) {
-        console.error("Erro ao buscar dados da species:", error);
-        alert("Erro ao buscar informações da espécie.");
-      }
+    fetchSpeciesInfo() {
+      this.$router.push(`/pokemon-species/${this.currentId}`);
     },
 
     async fetchPokemonList() {
@@ -533,6 +482,7 @@ main {
   left: 50%;
   transform: translateX(-50%);
 }
+
 .filter-buttons {
   display: flex;
   justify-content: center;
@@ -568,12 +518,10 @@ main {
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.2),
-    transparent
-  );
+  background: linear-gradient(90deg,
+      transparent,
+      rgba(255, 255, 255, 0.2),
+      transparent);
   transition: all 0.5s ease;
 }
 

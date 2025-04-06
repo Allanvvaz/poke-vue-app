@@ -1,7 +1,12 @@
 <template>
   <main v-if="showMain">
     <img src="../images/pokedex.png" alt="pokedex" class="pokedex" />
-    <img :src="pokemonImage" v-if="pokemonImage" alt="pokemon" class="pokemon__image" />
+    <img
+      :src="pokemonImage"
+      v-if="pokemonImage"
+      alt="pokemon"
+      class="pokemon__image"
+    />
 
     <h1 class="pokemon__data">
       <span class="pokemon__number">{{ pokemon?.id }}</span> -
@@ -9,11 +14,21 @@
     </h1>
 
     <form @submit.prevent="searchPokemon" class="form">
-      <input type="search" v-model="search" class="input__search" placeholder="Name or Number" required />
+      <input
+        type="search"
+        v-model="search"
+        class="input__search"
+        placeholder="Name or Number"
+        required
+      />
     </form>
 
     <div class="form_type">
-      <select v-model="selectedType" @change="fetchPokemonByType" class="input__search">
+      <select
+        v-model="selectedType"
+        @change="fetchPokemonByType"
+        class="input__search"
+      >
         <option value="">Select a Type</option>
         <option v-for="type in pokemonTypes" :key="type" :value="type">
           {{ type }}
@@ -37,7 +52,11 @@
     <button class="button filter-btn" @click="resetarFiltro">Todos</button>
   </div>
   <section class="infinite-list">
-    <div class="pokemon-card" v-for="pokemon in pokemonListFiltrada" :key="pokemon.name">
+    <div
+      class="pokemon-card"
+      v-for="pokemon in pokemonListFiltrada"
+      :key="pokemon.name"
+    >
       <img :src="pokemon.image" :alt="pokemon.name" />
       <p>#{{ pokemon.id }} - {{ pokemon.name }}</p>
     </div>
@@ -71,7 +90,6 @@ export default {
       pokemonList: [],
       showMain: false,
       filtroAtual: null,
-
       limit: 20,
       offset: 0,
       isLoading: false
@@ -99,7 +117,6 @@ export default {
       this.offset = 0;
       this.pokemonList = [];
       this.fetchPokemonList();
-
     },
     resetarFiltro() {
       this.filtroAtual = null;
@@ -161,7 +178,9 @@ export default {
       try {
         let response;
         if (this.filtroAtual) {
-          response = await fetch(`https://pokeapi.co/api/v2/pokemon?limit=1000&offset=0`);
+          response = await fetch(
+            `https://pokeapi.co/api/v2/pokemon?limit=1000&offset=0`
+          );
         } else {
           response = await fetch(
             `https://pokeapi.co/api/v2/pokemon?limit=${this.limit}&offset=${this.offset}`
@@ -175,7 +194,9 @@ export default {
             const res = await fetch(p.url);
             const pokeData = await res.json();
 
-            const speciesRes = await fetch(`https://pokeapi.co/api/v2/pokemon-species/${pokeData.id}`);
+            const speciesRes = await fetch(
+              `https://pokeapi.co/api/v2/pokemon-species/${pokeData.id}`
+            );
             const speciesData = await speciesRes.json();
 
             return {
@@ -296,7 +317,6 @@ export default {
       window.removeEventListener("scroll", this.handleScroll);
     },
 
-
     nextPokemon() {
       if (this.selectedType && this.pokemonListByType.length > 0) {
         if (this.currentTypeIndex < this.pokemonListByType.length - 1) {
@@ -349,7 +369,6 @@ main {
   top: 50px;
   left: 50%;
   transform: translateX(-50%);
-  
 }
 
 .pokemon__image {
@@ -519,7 +538,7 @@ main {
   justify-content: center;
   gap: 15px;
   position: absolute;
-  top: 600px; 
+  top: 600px;
   left: 0;
   right: 0;
   flex-wrap: wrap;
@@ -543,13 +562,18 @@ main {
 }
 
 .button.filter-btn::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
   transition: all 0.5s ease;
 }
 

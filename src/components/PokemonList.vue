@@ -513,4 +513,90 @@ main {
   left: 50%;
   transform: translateX(-50%);
 }
+.filter-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin: 20px 0;
+  flex-wrap: wrap;
+}
+
+.button.filter-btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 30px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  text-transform: uppercase;
+  font-size: 14px;
+  letter-spacing: 1px;
+  position: relative;
+  overflow: hidden;
+}
+
+.button.filter-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transition: all 0.5s ease;
+}
+
+.button.filter-btn:hover::before {
+  left: 100%;
+}
+
+.button.filter-btn:nth-child(1) {
+  background-color: #444;
+  color: white;
+}
+
+.button.filter-btn:nth-child(1):hover {
+  background-color: #444;
+  transform: translateY(-3px);
+  box-shadow: 0 6px 12px rgba(255, 209, 102, 0.3);
+}
+
+.button.filter-btn:nth-child(2) {
+  background-color: #444;
+  color: white;
+}
+
+.button.filter-btn:nth-child(2):hover {
+  background-color: #444;
+  transform: translateY(-3px);
+  box-shadow: 0 6px 12px rgba(167, 139, 250, 0.3);
+}
+
+.button.filter-btn:nth-child(3) {
+  background-color: #444;
+  color: white;
+}
+
+.button.filter-btn:nth-child(3):hover {
+  background-color: #444;
+  transform: translateY(-3px);
+  box-shadow: 0 6px 12px rgba(248, 113, 113, 0.3);
+}
+
+.button.filter-btn:nth-child(4) {
+  background-color: #444;
+  color: white;
+}
+
+.button.filter-btn:nth-child(4):hover {
+  background-color: #444;
+  transform: translateY(-3px);
+  box-shadow: 0 6px 12px rgba(79, 209, 197, 0.3);
+}
+
+.button.filter-btn:active {
+  transform: translateY(1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
 </style>

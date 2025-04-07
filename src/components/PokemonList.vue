@@ -45,6 +45,9 @@
           {{ type }}
         </span>
       </div>
+      <div v-if="typePagination.loading" class="loading-indicator">
+    Carregando mais Pokémons...
+  </div>
     </div>
   </section>
 
@@ -85,38 +88,46 @@ export default {
       pokemonListByType: [],
       currentTypeIndex: 0,
       isFilteringByType: false,
+      
+      typePagination: {
+      limit: 20,
+      offset: 0,
+      total: 0,
+      loading: false
+    }
     };
   },
   //computed Properties - Ordem lógica
 
   computed: {
     pokemonListFiltrada() {
-      let filteredList = this.pokemonList;
+    let filteredList = this.pokemonList;
 
-      if (this.selectedType && this.isFilteringByType) {
-        filteredList = filteredList.filter(pokemon =>
-          pokemon.types.includes(this.selectedType)
-        );
+    if (this.selectedType && this.isFilteringByType) {
+      // Já estamos filtrando por tipo, a lista já está filtrada
+      filteredList = filteredList.filter(pokemon =>
+        pokemon.types.includes(this.selectedType)
+      );
+    }
+
+    if (this.filtroAtual) {
+      switch (this.filtroAtual) {
+        case "bebe":
+          filteredList = filteredList.filter(pokemon => pokemon.is_baby);
+          break;
+        case "mitico":
+          filteredList = filteredList.filter(pokemon => pokemon.is_mythical);
+          break;
+        case "lendario":
+          filteredList = filteredList.filter(pokemon => pokemon.is_legendary);
+          break;
+        default:
+          break;
       }
+    }
 
-      if (this.filtroAtual) {
-        switch (this.filtroAtual) {
-          case "bebe":
-            filteredList = filteredList.filter(pokemon => pokemon.is_baby);
-            break;
-          case "mitico":
-            filteredList = filteredList.filter(pokemon => pokemon.is_mythical);
-            break;
-          case "lendario":
-            filteredList = filteredList.filter(pokemon => pokemon.is_legendary);
-            break;
-          default:
-            break;
-        }
-      }
-
-      return filteredList;
-    },
+    return filteredList;
+  },
   },
   // lifecycle Hooks
   mounted() {
@@ -131,27 +142,36 @@ export default {
 
     //navegação entre Pokémons
     nextPokemon() {
-      if (this.selectedType && this.pokemonListByType.length > 0) {
-        if (this.currentTypeIndex < this.pokemonListByType.length - 1) {
+  if (this.selectedType && this.isFilteringByType) {
+    if (this.currentTypeIndex < this.pokemonListFiltrada.length - 1) {
+      this.currentTypeIndex++;
+      this.renderPokemon(this.pokemonListFiltrada[this.currentTypeIndex].id);
+    } else if (this.typePagination.offset < this.typePagination.total) {
+      // Chegou ao final da lista atual, carrega mais Pokémons
+      this.fetchPokemonByType().then(() => {
+        if (this.currentTypeIndex < this.pokemonListFiltrada.length - 1) {
           this.currentTypeIndex++;
-          this.renderPokemon(this.pokemonListByType[this.currentTypeIndex]);
+          this.renderPokemon(this.pokemonListFiltrada[this.currentTypeIndex].id);
         }
-      } else {
-        this.currentId++;
-        this.renderPokemon(this.currentId);
-      }
-    },
-    prevPokemon() {
-      if (this.selectedType && this.pokemonListByType.length > 0) {
-        if (this.currentTypeIndex > 0) {
-          this.currentTypeIndex--;
-          this.renderPokemon(this.pokemonListByType[this.currentTypeIndex]);
-        }
-      } else if (this.currentId > 1) {
-        this.currentId--;
-        this.renderPokemon(this.currentId);
-      }
-    },
+      });
+    }
+  } else {
+    this.currentId++;
+    this.renderPokemon(this.currentId);
+  }
+},
+
+prevPokemon() {
+  if (this.selectedType && this.isFilteringByType) {
+    if (this.currentTypeIndex > 0) {
+      this.currentTypeIndex--;
+      this.renderPokemon(this.pokemonListFiltrada[this.currentTypeIndex].id);
+    }
+  } else if (this.currentId > 1) {
+    this.currentId--;
+    this.renderPokemon(this.currentId);
+  }
+},
     async renderPokemon(pokemon) {
       this.pokemon = null;
       this.pokemonImage = "";
@@ -176,49 +196,78 @@ export default {
     },
 
     async fetchPokemonByType() {
-      this.isFilteringByType = !!this.selectedType;
+  this.isFilteringByType = !!this.selectedType;
+  
+  if (!this.selectedType) {
+    this.isFilteringByType = false;
+    this.pokemonList = [];
+    this.typePagination.offset = 0;
+    this.offset = 0;
+    this.fetchPokemonList();
+    this.renderPokemon(this.currentId);
+    return;
+  }
 
-      if (!this.selectedType) {
-        this.isFilteringByType = false;
-        this.pokemonList = [];
-        this.offset = 0;
-        this.fetchPokemonList();
-        this.renderPokemon(this.currentId);
-        return;
-      }
+  try {
+    this.typePagination.loading = true;
+    const response = await fetch(
+      `https://pokeapi.co/api/v2/type/${this.selectedType}`
+    );
+    const data = await response.json();
+    
+    // Atualiza o total de Pokémons deste tipo
+    this.typePagination.total = data.pokemon.length;
+    
+    // Pega apenas os Pokémons da página atual
+    const paginatedPokemons = data.pokemon.slice(
+      this.typePagination.offset,
+      this.typePagination.offset + this.typePagination.limit
+    );
+    
+    const detailedList = await Promise.all(
+      paginatedPokemons.map(async (p) => {
+        const pokemonId = p.pokemon.url.split('/').slice(-2, -1)[0];
+        const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${pokemonId}`);
+        const pokeData = await res.json();
 
-      const response = await fetch(`https://pokeapi.co/api/v2/type/${this.selectedType}`);
-      const data = await response.json();
+        const speciesRes = await fetch(`https://pokeapi.co/api/v2/pokemon-species/${pokemonId}`);
+        const speciesData = await speciesRes.json();
 
-      const pokemonNames = data.pokemon.map(p => p.pokemon.name);
-      const detailedList = await Promise.all(
-        pokemonNames.map(async (name) => {
-          const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${name}`);
-          const pokeData = await res.json();
+        return {
+          name: pokeData.name,
+          id: pokeData.id,
+          image: pokeData.sprites.front_default,
+          types: pokeData.types.map(t => t.type.name),
+          is_baby: speciesData.is_baby,
+          is_mythical: speciesData.is_mythical,
+          is_legendary: speciesData.is_legendary,
+        };
+      })
+    );
 
-          const speciesRes = await fetch(`https://pokeapi.co/api/v2/pokemon-species/${pokeData.id}`);
-          const speciesData = await speciesRes.json();
-
-          return {
-            name: pokeData.name,
-            id: pokeData.id,
-            image: pokeData.sprites.front_default,
-            types: pokeData.types.map(t => t.type.name),
-            is_baby: speciesData.is_baby,
-            is_mythical: speciesData.is_mythical,
-            is_legendary: speciesData.is_legendary,
-          };
-        })
-      );
-
+    // Se for o primeiro carregamento, substitui a lista
+    if (this.typePagination.offset === 0) {
       this.pokemonList = detailedList;
-      this.pokemonListByType = detailedList.map(p => p.name);
-      this.currentTypeIndex = 0;
+    } else {
+      // Senão, adiciona ao final da lista
+      this.pokemonList.push(...detailedList);
+    }
+    
+    this.pokemonListByType = this.pokemonList.map(p => p.id);
+    this.currentTypeIndex = 0;
 
-      if (detailedList.length > 0) {
-        this.renderPokemon(detailedList[0].name);
-      }
-    },
+    if (detailedList.length > 0 && this.typePagination.offset === 0) {
+      this.renderPokemon(detailedList[0].id);
+    }
+    
+    // Incrementa o offset para a próxima página
+    this.typePagination.offset += this.typePagination.limit;
+  } catch (error) {
+    console.error("Error fetching Pokémon by type:", error);
+  } finally {
+    this.typePagination.loading = false;
+  }
+},
     filtrar(tipo) {
       this.filtroAtual = tipo;
       if (!this.isFilteringByType) {
@@ -327,16 +376,23 @@ export default {
     },
     //scroll infinito
     handleScroll() {
-      if (this.isLoading || this.filtroAtual) return;
+  if (this.isLoading || (this.filtroAtual && !this.isFilteringByType)) return;
 
-      const scrollTop = window.scrollY;
-      const windowHeight = window.innerHeight;
-      const fullHeight = document.body.offsetHeight;
+  const scrollTop = window.scrollY;
+  const windowHeight = window.innerHeight;
+  const fullHeight = document.body.offsetHeight;
 
-      if (scrollTop + windowHeight >= fullHeight - 200) {
-        this.fetchPokemonList();
+  if (scrollTop + windowHeight >= fullHeight - 200) {
+    if (this.isFilteringByType) {
+      // Verifica se ainda há Pokémons para carregar deste tipo
+      if (this.typePagination.offset < this.typePagination.total) {
+        this.fetchPokemonByType();
       }
+    } else {
+      this.fetchPokemonList();
     }
+  }
+}
   },
 
 };
@@ -710,5 +766,13 @@ main {
 .button.filter-btn:active {
   transform: translateY(1px);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.loading-indicator {
+  width: 100%;
+  text-align: center;
+  padding: 20px;
+  color: #666;
+  font-style: italic;
 }
 </style>

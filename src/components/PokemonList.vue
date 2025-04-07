@@ -30,8 +30,8 @@
 
   <div class="form_type" v-if="!showMain">
     <select
-      v-model="selectedType"
-      @change="fetchPokemonByType"
+      v-model="localSelectedType"
+      @change="onTypeChange"
       class="input__search"
     >
       <option value="">Select a Type</option>
@@ -101,6 +101,7 @@ export default {
   name: "PokemonPokedex",
   computed: {
     ...mapState("pokemon", [
+      "selectedType",
       "pokemon",
       "pokemonImage",
       "currentId",
@@ -132,7 +133,8 @@ export default {
   },
   data() {
     return {
-      localShowMain: false 
+      localShowMain: false,
+      localSelectedType: ""
     };
   },
   mounted() {
@@ -173,6 +175,10 @@ export default {
     fetchSpeciesInfo() {
       this.$router.push(`/pokemon-species/${this.currentId}`);
     },
+    onTypeChange() {
+    this.$store.commit("pokemon/SET_SELECTED_TYPE", this.localSelectedType);
+    this.fetchPokemonByType();
+  },
     handleScroll() {
       if (this.isLoading || (this.filtroAtual && !this.isFilteringByType))
         return;

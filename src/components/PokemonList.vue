@@ -10,9 +10,13 @@
 
     <form @submit.prevent="searchPokemon" class="form">
       <input type="search" v-model="search" class="input__search" placeholder="Name or Number" required />
-    </form>
-
-    <div class="form_type">
+    </form>   
+    <div class="buttons">
+      <button class="button btn-prev" @click="prevPokemon">Prev &lt;</button>
+      <button class="button btn-next" @click="nextPokemon">Next &gt;</button>
+    </div>
+  </main>
+  <div class="form_type" v-if="!showMain">
       <select v-model="selectedType" @change="fetchPokemonByType" class="input__search">
         <option value="">Select a Type</option>
         <option v-for="type in pokemonTypes" :key="type" :value="type">
@@ -20,12 +24,6 @@
         </option>
       </select>
     </div>
-
-    <div class="buttons">
-      <button class="button btn-prev" @click="prevPokemon">Prev &lt;</button>
-      <button class="button btn-next" @click="nextPokemon">Next &gt;</button>
-    </div>
-  </main>
   <div class="filter-buttons" v-if="!showMain">
     <button class="button filter-btn" @click="filtrar('bebe')">Bebês</button>
     <button class="button filter-btn" @click="filtrar('mitico')">
@@ -467,11 +465,12 @@ main {
 }
 
 .form_type {
-  margin-top: 10px;
-  position: fixed;
+  display: flex;
+  justify-content: center;
+  position: absolute;
   top: 400px;
-  left: 50%;
-  transform: translateX(-50%);
+  left: 0;
+  right: 0;
 }
 
 .buttons {

@@ -76,34 +76,6 @@ export default {
 };
 </script>
 
-<style scoped>
-.species-container {
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 2rem;
-  font-family: "Arial", sans-serif;
-}
+<style scoped src="./styles/PokemonSpecies.css">
 
-.info-section {
-  margin: 2rem 0;
-  padding: 1rem;
-  background: #f5f5f5;
-  border-radius: 8px;
-}
-
-.back-button {
-  padding: 0.8rem 1.5rem;
-  background-color: #d32f2f;
-  color: white;
-  border: none;
-  border-radius: 20px;
-  font-size: 1rem;
-  font-weight: bold;
-  cursor: pointer;
-  margin-top: 2rem;
-}
-
-.back-button:hover {
-  background-color: #b71c1c;
-}
 </style>

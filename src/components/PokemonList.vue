@@ -8,401 +8,153 @@
       <span class="pokemon__name">{{ pokemon?.name }}</span>
     </h1>
 
-    <form @submit.prevent="searchPokemon" class="form">
-      <input type="search" v-model="search" class="input__search" placeholder="Name or Number" required />
-    </form>   
+    <form @submit.prevent="handleSearch" class="form">
+    <input type="search" v-model="search" class="input__search" placeholder="Name or Number" required />
+  </form>   
     <div class="buttons">
       <button class="button btn-prev" @click="prevPokemon">Prev &lt;</button>
       <button class="button btn-next" @click="nextPokemon">Next &gt;</button>
     </div>
   </main>
+
   <div class="form_type" v-if="!showMain">
-      <select v-model="selectedType" @change="fetchPokemonByType" class="input__search">
-        <option value="">Select a Type</option>
-        <option v-for="type in pokemonTypes" :key="type" :value="type">
-          {{ type }}
-        </option>
-      </select>
-    </div>
+    <select v-model="selectedType" @change="fetchPokemonByType" class="input__search">
+      <option value="">Select a Type</option>
+      <option v-for="type in pokemonTypes" :key="type" :value="type">
+        {{ type }}
+      </option>
+    </select>
+  </div>
+
   <div class="filter-buttons" v-if="!showMain">
     <button class="button filter-btn" @click="filtrar('bebe')">Bebês</button>
-    <button class="button filter-btn" @click="filtrar('mitico')">
-      Míticos
-    </button>
-    <button class="button filter-btn" @click="filtrar('lendario')">
-      Lendários
-    </button>
+    <button class="button filter-btn" @click="filtrar('mitico')">Míticos</button>
+    <button class="button filter-btn" @click="filtrar('lendario')">Lendários</button>
     <button class="button filter-btn" @click="resetarFiltro">Todos</button>
   </div>
+
   <section class="infinite-list">
-    <div class="pokemon-card" v-for="pokemon in pokemonListFiltrada" :key="pokemon.name">
-      <img :src="pokemon.image" :alt="pokemon.name" />
-      <p>#{{ pokemon.id }} - {{ pokemon.name }}</p>
+    <div class="pokemon-card" v-for="p in pokemonListFiltrada" :key="p.name">
+      <img :src="p.image" :alt="p.name" />
+      <p>#{{ p.id }} - {{ p.name }}</p>
       <div class="pokemon-types">
-        <span v-for="type in pokemon.types" :key="type" class="type-badge" :class="'type-' + type">
+        <span v-for="type in p.types" :key="type" class="type-badge" :class="'type-' + type">
           {{ type }}
         </span>
       </div>
-      
     </div>
     <div v-if="typePagination.loading" class="loading-indicator">
-    Carregando mais Pokémons...
-  </div>
-    <div v-if="isFilteringByType && typePagination.offset >= typePagination.total && typePagination.total > 0" 
-       class="end-of-list">
-    Todos os Pokémons deste tipo foram carregados!
-  </div>
+      Carregando mais Pokémons...
+    </div>
+    <div v-if="isFilteringByType && typePagination.offset >= typePagination.total && typePagination.total > 0" class="end-of-list">
+      Todos os Pokémons deste tipo foram carregados!
+    </div>
   </section>
 
-  <button @click="showMain = !showMain" class="toggle-button">
+  <button @click="toggleMainLocal" class="toggle-button">
     {{ showMain ? "Hide Pokédex" : "Show Pokédex" }}
   </button>
 
   <div class="details-button-group" v-if="showMain">
     <button class="button btn-details" @click="goToDetails">Details 🔍</button>
-    <button class="button btn-species" @click="fetchSpeciesInfo">
-      Species Info 📘
-    </button>
+    <button class="button btn-species" @click="fetchSpeciesInfo">Species Info 📘</button>
   </div>
 </template>
 
 <script>
+import { mapState, mapGetters, mapActions } from "vuex";
+
 export default {
   name: "PokemonPokedex",
-  //data Properties - Agrupadas por funcionalidade
+  computed: {
+    ...mapState("pokemon", [
+      "search",
+      "pokemon",
+      "pokemonImage",
+      "currentId",
+      "search",
+      "selectedType",
+      "pokemonTypes",
+      "filtroAtual",
+      "pokemonList",
+      "limit",
+      "offset",
+      "pokemonListByType",
+      "currentTypeIndex",
+      "isFilteringByType",
+      "isLoading",
+      "typePagination"
+    ]),
+    ...mapGetters("pokemon", ["pokemonListFiltrada"]),
+    showMain() {
+      return this.$data.localShowMain;
+    }
+  },
   data() {
     return {
-      showMain: false,
-      isLoading: false,
-
-      pokemon: null,
-      pokemonImage: "",
-      currentId: 1,
-
-      search: "",
-      selectedType: "",
-      pokemonTypes: [],
-      filtroAtual: null,
-
-      pokemonList: [],
-      limit: 20,
-      offset: 0,
-
-      pokemonListByType: [],
-      currentTypeIndex: 0,
-      isFilteringByType: false,
-      
-      typePagination: {
-      limit: 20,
-      offset: 0,
-      total: 0,
-      loading: false,
-
-    }
+      localShowMain: false // Controle local para alternar a visibilidade principal
     };
   },
-  //computed Properties - Ordem lógica
-
-  computed: {
-    pokemonListFiltrada() {
-    let filteredList = this.pokemonList;
-
-    if (this.selectedType && this.isFilteringByType) {
-      filteredList = filteredList.filter(pokemon =>
-        pokemon.types.includes(this.selectedType)
-      );
-    }
-
-    if (this.filtroAtual) {
-      switch (this.filtroAtual) {
-        case "bebe":
-          filteredList = filteredList.filter(pokemon => pokemon.is_baby);
-          break;
-        case "mitico":
-          filteredList = filteredList.filter(pokemon => pokemon.is_mythical);
-          break;
-        case "lendario":
-          filteredList = filteredList.filter(pokemon => pokemon.is_legendary);
-          break;
-        default:
-          break;
-      }
-    }
-
-    return filteredList;
-  },
-  },
-  // lifecycle Hooks
   mounted() {
-    this.renderPokemon(this.currentId);
+    this.fetchPokemon(this.currentId);
     this.fetchPokemonTypes();
+    this.fetchPokemonList();
     window.addEventListener("scroll", this.handleScroll);
-    this.fetchPokemonList();
   },
-
-  //methods - Agrupados por funcionalidade
+  beforeUnmount() {
+    window.removeEventListener("scroll", this.handleScroll);
+  },
   methods: {
+    ...mapActions("pokemon", [
+      "searchPokemon",
+      "fetchPokemon",
+      "fetchPokemonTypes",
+      "fetchPokemonList",
+      "fetchPokemonByType",
+      "nextPokemon",
+      "prevPokemon",
+      "searchPokemon",
+      "filtrar",
+      "resetarFiltro"
+    ]),
+    handleSearch() {
+  const query = this.search?.toString().trim();
+  if (!query) return;
 
-    //navegação entre Pokémons
-    nextPokemon() {
-  if (this.selectedType && this.isFilteringByType) {
-    if (this.currentTypeIndex === this.pokemonListFiltrada.length - 1 && 
-        this.typePagination.offset < this.typePagination.total) {
-      this.fetchPokemonByType().then(() => {
-        if (this.currentTypeIndex < this.pokemonListFiltrada.length - 1) {
-          this.currentTypeIndex++;
-          this.renderPokemon(this.pokemonListFiltrada[this.currentTypeIndex].id);
-        }
-      });
-    } 
-    else if (this.currentTypeIndex < this.pokemonListFiltrada.length - 1) {
-      this.currentTypeIndex++;
-      this.renderPokemon(this.pokemonListFiltrada[this.currentTypeIndex].id);
-    }
-  } else {
-    this.currentId++;
-    this.renderPokemon(this.currentId);
-  }
-},
+  const normalizedQuery = isNaN(query) ? query.toLowerCase() : query;
 
-prevPokemon() {
-  if (this.selectedType && this.isFilteringByType) {
-    if (this.currentTypeIndex > 0) {
-      this.currentTypeIndex--;
-      this.renderPokemon(this.pokemonListFiltrada[this.currentTypeIndex].id);
-    }
-  } else if (this.currentId > 1) {
-    this.currentId--;
-    this.renderPokemon(this.currentId);
-  }
-},
-    async renderPokemon(pokemon) {
-      this.pokemon = null;
-      this.pokemonImage = "";
-      this.pokemon = await this.fetchPokemon(pokemon);
-      if (this.pokemon) {
-        this.pokemonImage =
-          this.pokemon.sprites.versions?.["generation-v"]?.["black-white"]
-            ?.animated?.front_default || this.pokemon.sprites.front_default;
-
-        this.currentId = this.pokemon.id;
-        this.search = "";
-      }
+  this.searchPokemon(normalizedQuery);
+}
+,
+    toggleMainLocal() {
+      this.localShowMain = !this.localShowMain;
     },
-
-    //Busca/Filtros
-    searchPokemon() {
-      this.selectedType = "";
-      this.isFilteringByType = false;
-      this.pokemonListByType = [];
-      this.currentTypeIndex = 0;
-      this.renderPokemon(this.search.toLowerCase());
-    },
-
-    async fetchPokemonByType() {
-  this.isFilteringByType = !!this.selectedType;
-  
-  if (!this.selectedType) {
-    this.isFilteringByType = false;
-    this.pokemonList = [];
-    this.typePagination.offset = 0;
-    this.offset = 0;
-    this.fetchPokemonList();
-    this.renderPokemon(this.currentId);
-    return;
-  }
-  if (this.typePagination.loading || 
-      (this.typePagination.offset >= this.typePagination.total && this.typePagination.total > 0)) {
-    return;
-  }
-
-  this.isFilteringByType = true;
-  this.typePagination.loading = true;
-
-  try {
-    this.typePagination.loading = true;
-    const response = await fetch(
-      `https://pokeapi.co/api/v2/type/${this.selectedType}`
-    );
-    const data = await response.json();
-    
-    this.typePagination.total = data.pokemon.length;
-    
-    const paginatedPokemons = data.pokemon.slice(
-      this.typePagination.offset,
-      this.typePagination.offset + this.typePagination.limit
-    );
-    
-    const detailedList = await Promise.all(
-      paginatedPokemons.map(async (p) => {
-        const pokemonId = p.pokemon.url.split('/').slice(-2, -1)[0];
-        const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${pokemonId}`);
-        const pokeData = await res.json();
-
-        const speciesRes = await fetch(`https://pokeapi.co/api/v2/pokemon-species/${pokemonId}`);
-        const speciesData = await speciesRes.json();
-
-        return {
-          name: pokeData.name,
-          id: pokeData.id,
-          image: pokeData.sprites.front_default,
-          types: pokeData.types.map(t => t.type.name),
-          is_baby: speciesData.is_baby,
-          is_mythical: speciesData.is_mythical,
-          is_legendary: speciesData.is_legendary,
-        };
-      })
-    );
-
-    if (this.typePagination.offset === 0) {
-      this.pokemonList = detailedList;
-    } else {
-      this.pokemonList.push(...detailedList);
-    }
-    
-    this.pokemonListByType = this.pokemonList.map(p => p.id);
-    this.currentTypeIndex = 0;
-
-    if (detailedList.length > 0 && this.typePagination.offset === 0) {
-      this.renderPokemon(detailedList[0].id);
-    }
-    
-    this.typePagination.offset += this.typePagination.limit;
-  } catch (error) {
-    console.error("Error fetching Pokémon by type:", error);
-  } finally {
-    this.typePagination.loading = false;
-  }
-},
-    filtrar(tipo) {
-      this.filtroAtual = tipo;
-      if (!this.isFilteringByType) {
-        this.offset = 0;
-        this.pokemonList = [];
-        this.fetchPokemonList();
-      }
-    },
-
-    resetarFiltro() {
-      this.filtroAtual = null;
-      if (!this.isFilteringByType) {
-        this.offset = 0;
-        this.pokemonList = [];
-        this.fetchPokemonList();
-      }
-    },
-
-    //fetch de dados
-    async fetchPokemon(pokemon) {
-      const response = await fetch(
-        `https://pokeapi.co/api/v2/pokemon/${pokemon}`
-      );
-      if (response.ok) {
-        return await response.json();
-      } else {
-        return null;
-      }
-    },
-    async fetchPokemonList() {
-      if (this.isLoading) return;
-      this.isLoading = true;
-
-      try {
-        let response;
-        if (this.filtroAtual) {
-          response = await fetch(
-            `https://pokeapi.co/api/v2/pokemon?limit=1000&offset=0`
-          );
-        } else {
-          response = await fetch(
-            `https://pokeapi.co/api/v2/pokemon?limit=${this.limit}&offset=${this.offset}`
-          );
-        }
-
-        const data = await response.json();
-
-        const detailedPokemon = await Promise.all(
-          data.results.map(async (p) => {
-            const res = await fetch(p.url);
-            const pokeData = await res.json();
-
-            const speciesRes = await fetch(
-              `https://pokeapi.co/api/v2/pokemon-species/${pokeData.id}`
-            );
-            const speciesData = await speciesRes.json();
-
-            return {
-              name: pokeData.name,
-              id: pokeData.id,
-              image: pokeData.sprites.front_default,
-              is_baby: speciesData.is_baby,
-              is_mythical: speciesData.is_mythical,
-              is_legendary: speciesData.is_legendary,
-              types: pokeData.types.map(t => t.type.name)
-            };
-          })
-        );
-
-        if (this.filtroAtual) {
-          this.pokemonList = this.aplicarFiltro(detailedPokemon);
-        } else {
-          this.pokemonList.push(...detailedPokemon);
-          this.offset += this.limit;
-        }
-      } catch (error) {
-        console.error("Error fetching Pokémon list:", error);
-      } finally {
-        this.isLoading = false;
-      }
-    },
-    async fetchPokemonTypes() {
-      const response = await fetch(`https://pokeapi.co/api/v2/type/`);
-      const data = await response.json();
-      this.pokemonTypes = data.results.map((type) => type.name);
-    },
-    aplicarFiltro(lista) {
-      switch (this.filtroAtual) {
-        case "bebe":
-          return lista.filter((p) => p.is_baby);
-        case "mitico":
-          return lista.filter((p) => p.is_mythical);
-        case "lendario":
-          return lista.filter((p) => p.is_legendary);
-        default:
-          return lista;
-      }
-    },
-
-    //navegação entre páginas
     goToDetails() {
       this.$router.push(`/pokemon/${this.currentId}`);
     },
     fetchSpeciesInfo() {
       this.$router.push(`/pokemon-species/${this.currentId}`);
     },
-    //scroll infinito
     handleScroll() {
-  if (this.isLoading || (this.filtroAtual && !this.isFilteringByType)) return;
+      if (this.isLoading || (this.filtroAtual && !this.isFilteringByType)) return;
 
-  const scrollTop = window.scrollY;
-  const windowHeight = window.innerHeight;
-  const fullHeight = document.body.offsetHeight;
+      const scrollTop = window.scrollY;
+      const windowHeight = window.innerHeight;
+      const fullHeight = document.body.offsetHeight;
 
-  if (scrollTop + windowHeight >= fullHeight - 200) {
-    if (this.isFilteringByType) {
-      if (this.typePagination.offset < this.typePagination.total) {
-        this.fetchPokemonByType();
+      if (scrollTop + windowHeight >= fullHeight - 200) {
+        if (this.isFilteringByType) {
+          if (this.typePagination.offset < this.typePagination.total) {
+            this.fetchPokemonByType();
+          }
+        } else {
+          this.fetchPokemonList();
+        }
       }
-    } else {
-      this.fetchPokemonList();
     }
   }
-}
-  },
-
 };
 </script>
-
 
 <style scoped>
 main {

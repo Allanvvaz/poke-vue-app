@@ -5,7 +5,7 @@
 </template>
 
 <script>
-import PokemonList from '@/components/PokemonList.vue'
+import PokemonList from '../components/PokemonList.vue'
 
 export default {
   name: 'HomeView',

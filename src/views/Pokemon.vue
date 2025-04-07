@@ -1,4 +1,3 @@
-
 <template>
   <div class="container mt-4">
     <PokemonDetails />
@@ -6,11 +5,11 @@
 </template>
 
 <script>
-import PokemonDetails from '../components/PokemonDetails.vue'
+import PokemonDetails from "../components/PokemonDetails.vue";
 
 export default {
   components: {
     PokemonDetails
   }
-}
+};
 </script>

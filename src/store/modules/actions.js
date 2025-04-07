@@ -197,7 +197,6 @@ export default {
         commit('SET_POKEMON_LIST_BY_TYPE', []);
         commit('SET_CURRENT_TYPE_INDEX', 0);
       
-        // Aqui você pode buscar pelo nome ou ID normalmente
         dispatch('fetchPokemon', searchTerm);
       },
       
@@ -217,8 +216,6 @@ export default {
     },
   
     toggleMainView({ commit, state }) {
-      // Caso queira controlar a visibilidade principal via Vuex.
-      // Se preferir, pode tratar isso diretamente no componente.
       commit('SET_SHOW_MAIN', !state.showMain);
     }
   };

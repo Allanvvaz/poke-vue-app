@@ -50,7 +50,9 @@
       Lendários
     </button>
     <button class="button filter-btn" @click="resetarFiltro">Todos</button>
-    <button class="button filter-btn reset-all" @click="resetAllFilters">Reset All</button>
+    <button class="button filter-btn reset-all" @click="resetAllFilters">
+      Reset All
+    </button>
   </div>
 
   <section class="infinite-list">
@@ -177,11 +179,11 @@ export default {
       this.fetchPokemonByType();
     },
     resetAllFilters() {
-      this.localSelectedType = '';
-      this.$store.commit("pokemon/SET_SELECTED_TYPE", '');
-      
+      this.localSelectedType = "";
+      this.$store.commit("pokemon/SET_SELECTED_TYPE", "");
+
       this.resetarFiltro();
-      
+
       this.$store.commit("pokemon/SET_IS_FILTERING_BY_TYPE", false);
       this.fetchPokemonList();
     },
@@ -207,6 +209,4 @@ export default {
 };
 </script>
 
-<style scoped src="./styles/pokemonList.css">
-
-</style>
+<style scoped src="./styles/pokemonList.css"></style>

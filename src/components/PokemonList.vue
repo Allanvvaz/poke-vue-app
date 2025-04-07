@@ -110,7 +110,6 @@ export default {
     let filteredList = this.pokemonList;
 
     if (this.selectedType && this.isFilteringByType) {
-      // Já estamos filtrando por tipo, a lista já está filtrada
       filteredList = filteredList.filter(pokemon =>
         pokemon.types.includes(this.selectedType)
       );
@@ -149,7 +148,6 @@ export default {
     //navegação entre Pokémons
     nextPokemon() {
   if (this.selectedType && this.isFilteringByType) {
-    // Se está no último Pokémon da lista atual mas ainda há mais para carregar
     if (this.currentTypeIndex === this.pokemonListFiltrada.length - 1 && 
         this.typePagination.offset < this.typePagination.total) {
       this.fetchPokemonByType().then(() => {
@@ -159,7 +157,6 @@ export default {
         }
       });
     } 
-    // Se há mais Pokémons na lista atual
     else if (this.currentTypeIndex < this.pokemonListFiltrada.length - 1) {
       this.currentTypeIndex++;
       this.renderPokemon(this.pokemonListFiltrada[this.currentTypeIndex].id);
@@ -231,10 +228,8 @@ prevPokemon() {
     );
     const data = await response.json();
     
-    // Atualiza o total de Pokémons deste tipo
     this.typePagination.total = data.pokemon.length;
     
-    // Pega apenas os Pokémons da página atual
     const paginatedPokemons = data.pokemon.slice(
       this.typePagination.offset,
       this.typePagination.offset + this.typePagination.limit
@@ -261,11 +256,9 @@ prevPokemon() {
       })
     );
 
-    // Se for o primeiro carregamento, substitui a lista
     if (this.typePagination.offset === 0) {
       this.pokemonList = detailedList;
     } else {
-      // Senão, adiciona ao final da lista
       this.pokemonList.push(...detailedList);
     }
     
@@ -276,7 +269,6 @@ prevPokemon() {
       this.renderPokemon(detailedList[0].id);
     }
     
-    // Incrementa o offset para a próxima página
     this.typePagination.offset += this.typePagination.limit;
   } catch (error) {
     console.error("Error fetching Pokémon by type:", error);
@@ -400,7 +392,6 @@ prevPokemon() {
 
   if (scrollTop + windowHeight >= fullHeight - 200) {
     if (this.isFilteringByType) {
-      // Verifica se ainda há Pokémons para carregar deste tipo
       if (this.typePagination.offset < this.typePagination.total) {
         this.fetchPokemonByType();
       }

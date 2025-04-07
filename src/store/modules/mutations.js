@@ -8,8 +8,8 @@ export default {
     SET_CURRENT_ID(state, id) {
       state.currentId = id;
     },
-    SET_SEARCH(state, searchTerm) {
-      state.search = searchTerm;
+    SET_SEARCH(state, value) {
+      state.search = value;
     },
     SET_SELECTED_TYPE(state, type) {
       state.selectedType = type;

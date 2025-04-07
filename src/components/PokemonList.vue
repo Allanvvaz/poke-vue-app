@@ -67,9 +67,7 @@
         </span>
       </div>
     </div>
-    <div v-if="typePagination.loading" class="loading-indicator">
-      Carregando mais Pokémons...
-    </div>
+    <div v-if="typePagination.loading" class="loading-indicator"></div>
     <div
       v-if="
         isFilteringByType &&
@@ -77,9 +75,7 @@
         typePagination.total > 0
       "
       class="end-of-list"
-    >
-      Todos os Pokémons deste tipo foram carregados!
-    </div>
+    ></div>
   </section>
 
   <button @click="toggleMainLocal" class="toggle-button">
@@ -122,7 +118,7 @@ export default {
         return this.$store.state.pokemon.search;
       },
       set(value) {
-        this.$store.commit("pokemon/SET_SEARCH", value); 
+        this.$store.commit("pokemon/SET_SEARCH", value);
       }
     },
 
@@ -176,9 +172,9 @@ export default {
       this.$router.push(`/pokemon-species/${this.currentId}`);
     },
     onTypeChange() {
-    this.$store.commit("pokemon/SET_SELECTED_TYPE", this.localSelectedType);
-    this.fetchPokemonByType();
-  },
+      this.$store.commit("pokemon/SET_SELECTED_TYPE", this.localSelectedType);
+      this.fetchPokemonByType();
+    },
     handleScroll() {
       if (this.isLoading || (this.filtroAtual && !this.isFilteringByType))
         return;

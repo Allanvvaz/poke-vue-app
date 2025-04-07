@@ -45,10 +45,15 @@
           {{ type }}
         </span>
       </div>
-      <div v-if="typePagination.loading" class="loading-indicator">
+      
+    </div>
+    <div v-if="typePagination.loading" class="loading-indicator">
     Carregando mais Pokémons...
   </div>
-    </div>
+    <div v-if="isFilteringByType && typePagination.offset >= typePagination.total && typePagination.total > 0" 
+       class="end-of-list">
+    Todos os Pokémons deste tipo foram carregados!
+  </div>
   </section>
 
   <button @click="showMain = !showMain" class="toggle-button">
@@ -93,7 +98,8 @@ export default {
       limit: 20,
       offset: 0,
       total: 0,
-      loading: false
+      loading: false,
+
     }
     };
   },
@@ -143,17 +149,20 @@ export default {
     //navegação entre Pokémons
     nextPokemon() {
   if (this.selectedType && this.isFilteringByType) {
-    if (this.currentTypeIndex < this.pokemonListFiltrada.length - 1) {
-      this.currentTypeIndex++;
-      this.renderPokemon(this.pokemonListFiltrada[this.currentTypeIndex].id);
-    } else if (this.typePagination.offset < this.typePagination.total) {
-      // Chegou ao final da lista atual, carrega mais Pokémons
+    // Se está no último Pokémon da lista atual mas ainda há mais para carregar
+    if (this.currentTypeIndex === this.pokemonListFiltrada.length - 1 && 
+        this.typePagination.offset < this.typePagination.total) {
       this.fetchPokemonByType().then(() => {
         if (this.currentTypeIndex < this.pokemonListFiltrada.length - 1) {
           this.currentTypeIndex++;
           this.renderPokemon(this.pokemonListFiltrada[this.currentTypeIndex].id);
         }
       });
+    } 
+    // Se há mais Pokémons na lista atual
+    else if (this.currentTypeIndex < this.pokemonListFiltrada.length - 1) {
+      this.currentTypeIndex++;
+      this.renderPokemon(this.pokemonListFiltrada[this.currentTypeIndex].id);
     }
   } else {
     this.currentId++;
@@ -207,6 +216,13 @@ prevPokemon() {
     this.renderPokemon(this.currentId);
     return;
   }
+  if (this.typePagination.loading || 
+      (this.typePagination.offset >= this.typePagination.total && this.typePagination.total > 0)) {
+    return;
+  }
+
+  this.isFilteringByType = true;
+  this.typePagination.loading = true;
 
   try {
     this.typePagination.loading = true;
@@ -774,5 +790,14 @@ main {
   padding: 20px;
   color: #666;
   font-style: italic;
+}
+.end-of-list {
+  width: 100%;
+  text-align: center;
+  padding: 20px;
+  color: #666;
+  font-style: italic;
+  border-top: 1px solid #eee;
+  margin-top: 10px;
 }
 </style>

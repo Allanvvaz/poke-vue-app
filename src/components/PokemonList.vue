@@ -275,6 +275,33 @@ main {
   left: 0;
   right: 0;
 }
+.form_type {
+  display: flex;
+  justify-content: center;
+  margin: 20px 0;
+}
+
+.form_type select.input__search {
+  padding: 10px 15px;
+  border: 2px solid #333;
+  border-radius: 10px;
+  font-size: 16px;
+  background-color: #f8f8f8;
+  color: #333;
+  transition: 0.3s ease-in-out;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.form_type select.input__search:hover {
+  border-color: #ff0000;
+}
+
+.form_type select.input__search:focus {
+  outline: none;
+  border-color: #ffcc00;
+  background-color: #fffbe6;
+}
+
 
 .buttons {
   display: flex;

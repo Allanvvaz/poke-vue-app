@@ -1,24 +1,38 @@
-# poke-vue-app
+# 🔍 Pokédex Vue
 
-## Project setup
-```
-npm install
-```
+Uma Pokédex interativa desenvolvida com Vue.js que consome a [PokeAPI](https://pokeapi.co/) e permite pesquisar, filtrar e visualizar informações detalhadas sobre os Pokémons.
 
-### Compiles and hot-reloads for development
-```
-npm run serve
-```
+![pokedex screenshot](./src/images/pokedex.png)
 
-### Compiles and minifies for production
-```
-npm run build
-```
+## ✨ Funcionalidades
 
-### Lints and fixes files
-```
-npm run lint
-```
+- 🔎 Busca por nome ou número do Pokémon
+- 🔁 Navegação entre Pokémon anterior e próximo
+- 🧠 Filtro por tipo (fogo, água, grama, etc)
+- 👶 Filtros especiais: Bebês, Míticos e Lendários
+- ♾️ Scroll infinito para listagem de Pokémon
+- 📘 Visualização detalhada e por espécie
+- 🎮 Interface estilizada simulando uma Pokédex clássica
 
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
+---
+
+## 🚀 Tecnologias utilizadas
+
+- [Vue.js 3](https://vuejs.org/)
+- [Vuex](https://vuex.vuejs.org/)
+- [Vue Router](https://router.vuejs.org/)
+- [Bootstrap (em algumas partes)](https://getbootstrap.com/)
+- [PokeAPI](https://pokeapi.co/)
+
+---
+
+## 📦 Instalação
+
+Clone o repositório:
+
+```bash
+git clone https://github.com/Allanvvaz/poke-vue-app.git
+
+cd pokedex-vue
+
+npm install vuex@next --save

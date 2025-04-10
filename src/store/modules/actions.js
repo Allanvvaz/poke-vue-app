@@ -97,12 +97,19 @@ export default {
   },
 
   async fetchPokemonByType({ commit, state, dispatch }) {
+    // Resetar paginação se o tipo mudou
+    if (state.lastSelectedType !== state.selectedType) {
+      commit("RESET_TYPE_PAGINATION");
+      commit("SET_LAST_SELECTED_TYPE", state.selectedType);
+    }
+  
     if (!state.selectedType) {
       commit("SET_IS_FILTERING_BY_TYPE", false);
       commit("SET_POKEMON_LIST", []);
       commit("RESET_TYPE_PAGINATION");
       return;
     }
+  
     if (
       state.typePagination.loading ||
       (state.typePagination.offset >= state.typePagination.total &&
@@ -110,10 +117,10 @@ export default {
     ) {
       return;
     }
-
+  
     commit("SET_IS_FILTERING_BY_TYPE", true);
     commit("UPDATE_TYPE_PAGINATION", { key: "loading", value: true });
-
+  
     try {
       const response = await fetch(
         `https://pokeapi.co/api/v2/type/${state.selectedType}`
@@ -123,10 +130,13 @@ export default {
         key: "total",
         value: data.pokemon.length
       });
+      
       const paginatedPokemons = data.pokemon.slice(
         state.typePagination.offset,
         state.typePagination.offset + state.typePagination.limit
       );
+      
+      // Restante do código permanece o mesmo...
       const detailedList = await Promise.all(
         paginatedPokemons
           .filter((p) => {
@@ -158,23 +168,22 @@ export default {
           })
       );
       
-
       if (state.typePagination.offset === 0) {
         commit("SET_POKEMON_LIST", detailedList);
       } else {
         commit("ADD_TO_POKEMON_LIST", detailedList);
       }
-
+  
       commit(
         "SET_POKEMON_LIST_BY_TYPE",
         state.pokemonList.map((p) => p.id)
       );
       commit("SET_CURRENT_TYPE_INDEX", 0);
-
+  
       if (detailedList.length > 0 && state.typePagination.offset === 0) {
         await dispatch("fetchPokemon", detailedList[0].id);
       }
-
+  
       commit("UPDATE_TYPE_PAGINATION", {
         key: "offset",
         value: state.typePagination.offset + state.typePagination.limit

@@ -49,5 +49,8 @@ export default {
   },
   RESET_TYPE_PAGINATION(state) {
     state.typePagination.offset = 0;
-  }
+  },
+SET_LAST_SELECTED_TYPE(state, type) {
+  state.lastSelectedType = type;
+}
 };

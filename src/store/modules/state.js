@@ -17,6 +17,8 @@ export default {
     limit: 20,
     offset: 0,
     total: 0,
-    loading: false
+    loading: false,
+    lastSelectedType: null,
+
   }
 };

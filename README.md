@@ -36,3 +36,5 @@ git clone https://github.com/Allanvvaz/poke-vue-app.git
 cd pokedex-vue
 
 npm install vuex@next --save
+
+npm run serve

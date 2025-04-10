@@ -128,27 +128,36 @@ export default {
         state.typePagination.offset + state.typePagination.limit
       );
       const detailedList = await Promise.all(
-        paginatedPokemons.map(async (p) => {
-          const pokemonId = p.pokemon.url.split("/").slice(-2, -1)[0];
-          const res = await fetch(
-            `https://pokeapi.co/api/v2/pokemon/${pokemonId}`
-          );
-          const pokeData = await res.json();
-          const speciesRes = await fetch(
-            `https://pokeapi.co/api/v2/pokemon-species/${pokemonId}`
-          );
-          const speciesData = await speciesRes.json();
-          return {
-            name: pokeData.name,
-            id: pokeData.id,
-            image: pokeData.sprites.front_default,
-            types: pokeData.types.map((t) => t.type.name),
-            is_baby: speciesData.is_baby,
-            is_mythical: speciesData.is_mythical,
-            is_legendary: speciesData.is_legendary
-          };
-        })
+        paginatedPokemons
+          .filter((p) => {
+            const pokemonId = Number(p.pokemon.url.split("/").slice(-2, -1)[0]);
+            return pokemonId <= 1025;
+          })
+          .map(async (p) => {
+            const pokemonId = p.pokemon.url.split("/").slice(-2, -1)[0];
+      
+            const res = await fetch(
+              `https://pokeapi.co/api/v2/pokemon/${pokemonId}`
+            );
+            const pokeData = await res.json();
+      
+            const speciesRes = await fetch(
+              `https://pokeapi.co/api/v2/pokemon-species/${pokemonId}`
+            );
+            const speciesData = await speciesRes.json();
+      
+            return {
+              name: pokeData.name,
+              id: pokeData.id,
+              image: pokeData.sprites.front_default,
+              types: pokeData.types.map((t) => t.type.name),
+              is_baby: speciesData.is_baby,
+              is_mythical: speciesData.is_mythical,
+              is_legendary: speciesData.is_legendary,
+            };
+          })
       );
+      
 
       if (state.typePagination.offset === 0) {
         commit("SET_POKEMON_LIST", detailedList);

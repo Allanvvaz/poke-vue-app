@@ -97,7 +97,6 @@ export default {
   },
 
   async fetchPokemonByType({ commit, state, dispatch }) {
-    // Resetar paginação se o tipo mudou
     if (state.lastSelectedType !== state.selectedType) {
       commit("RESET_TYPE_PAGINATION");
       commit("SET_LAST_SELECTED_TYPE", state.selectedType);
@@ -136,7 +135,6 @@ export default {
         state.typePagination.offset + state.typePagination.limit
       );
       
-      // Restante do código permanece o mesmo...
       const detailedList = await Promise.all(
         paginatedPokemons
           .filter((p) => {
